@@ -6,7 +6,6 @@ import ContentHeader from "@/components/ContentHeader";
 import Header from "@/components/Header";
 import NoProfileNotice from "@/components/NoProfileNotice";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import ProfileModal from "@/components/ProfileModal";
 import Sidebar from "@/components/Sidebar";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
@@ -19,10 +18,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const {
     profile,
     hydrated,
-    menu,
+    navigation,
     sidebarOpen,
     setSidebarOpen,
-    profileOpen,
     actions,
   } = useUser();
   const { request } = useApi();
@@ -69,9 +67,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
         <Header />
         <main className="flex-1 overflow-auto">
-          <NoProfileNotice />
+          {canAccessRoute(roles, currentRoute) ? children : <NoProfileNotice />}
         </main>
-        {profileOpen && <ProfileModal />}
       </div>
     );
   }
@@ -87,12 +84,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           } shrink-0 overflow-hidden border-r border-slate-200 bg-surface transition-all duration-300 ease-in-out`}
         >
           <div className="flex h-full w-72 flex-col">
-            <Sidebar items={menu} onNavigate={() => setSidebarOpen(false)} />
+            <Sidebar sections={navigation} onNavigate={() => setSidebarOpen(false)} />
           </div>
         </aside>
 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-          {profileOpen && <ProfileModal />}
 
           {!isHome && (
             <ContentHeader

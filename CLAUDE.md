@@ -28,6 +28,7 @@ npm run seed:force --workspace api        # recreate seed data
 
 - `tasks/`: the roadmap, one Portuguese markdown file per task. Start at `tasks/00-visao-geral.md`.
 - `.claude/rules/`: language, git, workflow and code conventions. Follow them.
+- `docs/navigation.md`: navigation per profile (defined in `frontend/src/config/navigation.ts`; UI restriction only, the API guards are the security boundary).
 - `docs/design-system.md`: visual identity, tokens and theming (values live in `frontend/src/styles/tokens.ts`; never hard-code colours in components).
 - `api/test/`: e2e tests; `api/vitest.config.ts` configures the runner (SWC for decorator metadata).
 

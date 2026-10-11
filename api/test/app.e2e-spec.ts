@@ -111,6 +111,7 @@ describe('Academic System API (e2e)', () => {
       expect(res.body).toEqual({
         cpf: ADMIN_CPF,
         name: 'Alice Admin',
+        email: 'alice@example.com',
         registrationNumber: null,
         roles: ['admin'],
       });

@@ -2,18 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  Building2,
-  ClipboardList,
-  GraduationCap,
-  IdCard,
-  Library,
-  Presentation,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import NavIcon from "@/components/NavIcon";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
 import {
@@ -24,37 +14,6 @@ import {
 } from "@/lib/dashboard";
 import { STUDENT_STATUS_LABELS } from "@/lib/labels";
 import type { DashboardData } from "@/types";
-
-const ROUTE_META: Record<string, { icon: LucideIcon; description: string }> = {
-  "register-users": {
-    icon: Users,
-    description: "Cadastre e edite as pessoas que acessam o sistema.",
-  },
-  staff: {
-    icon: IdCard,
-    description: "Administradores e secretaria do sistema.",
-  },
-  students: {
-    icon: GraduationCap,
-    description: "Consulte e cadastre alunos, cursos e situação acadêmica.",
-  },
-  teachers: {
-    icon: Presentation,
-    description: "Consulte e cadastre professores e seus departamentos.",
-  },
-  departments: {
-    icon: Building2,
-    description: "Departamentos acadêmicos, seus cursos e professores.",
-  },
-  courses: {
-    icon: Library,
-    description: "Cursos e a matriz curricular de cada um.",
-  },
-  subjects: {
-    icon: BookOpen,
-    description: "Disciplinas, cargas horárias e pré-requisitos.",
-  },
-};
 
 function Tiles({ tiles }: { tiles: StatTile[] }) {
   return (
@@ -89,7 +48,7 @@ function Section({
 }
 
 export default function AppHomePage() {
-  const { profile, roleName, menu } = useUser();
+  const { profile, roleName, navigation } = useUser();
   const { request } = useApi();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const hasProfile = (profile?.roles.length ?? 0) > 0;
@@ -177,7 +136,7 @@ export default function AppHomePage() {
         >
           <Tiles tiles={studentTiles(dashboard.student)} />
           <Link
-            href={`/app/courses/${dashboard.student.course.id}/curriculum`}
+            href="/app/my-curriculum"
             className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-600"
           >
             Ver a matriz curricular <ArrowRight className="h-4 w-4" />
@@ -186,37 +145,44 @@ export default function AppHomePage() {
       )}
 
       <Section title="Módulos">
-        {menu.length === 0 ? (
+        {navigation.length === 0 ? (
           <div className="card p-8 text-center text-sm text-slate-500">
             Seu perfil não tem módulos disponíveis.
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {menu.map((item) => {
-              const meta = ROUTE_META[item.route];
-              const Icon = meta?.icon ?? ClipboardList;
-              return (
-                <Link
-                  key={item.route}
-                  href={`/app/${item.route}`}
-                  className="card group flex flex-col gap-3 p-5 no-underline transition-shadow hover:shadow-panel"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <p className="font-semibold text-slate-900">{item.label}</p>
-                    {meta && (
-                      <p className="mt-1 text-sm text-slate-500">{meta.description}</p>
-                    )}
-                  </div>
-                  <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-brand-600">
-                    Abrir
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              );
-            })}
+          <div className="space-y-6">
+            {navigation.map((group) => (
+              <div key={group.id}>
+                {group.title && (
+                  <h3 className="mb-3 text-sm font-semibold text-slate-600">
+                    {group.title}
+                  </h3>
+                )}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.route}
+                      href={`/app/${item.route}`}
+                      className="card group flex flex-col gap-3 p-5 no-underline transition-shadow hover:shadow-panel"
+                    >
+                      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+                        <NavIcon name={item.icon} className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="font-semibold text-slate-900">{item.label}</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {item.description}
+                        </p>
+                      </div>
+                      <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-brand-600">
+                        Abrir
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Section>

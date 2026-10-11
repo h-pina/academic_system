@@ -3,6 +3,7 @@ import {
   isValidCode,
   validateCourseDraft,
   validateDepartmentDraft,
+  validateProfileForm,
   validateStaffDraft,
   validateStudentDraft,
   validateSubjectDraft,
@@ -162,5 +163,64 @@ describe("validateStaffDraft", () => {
     const blank = { ...person, name: "", email: "" };
     expect(validateStaffDraft(blank, { existingUser: false })).toHaveLength(2);
     expect(validateStaffDraft(blank, { existingUser: true })).toEqual([]);
+  });
+});
+
+describe("validateProfileForm", () => {
+  const draft = {
+    name: "Alice Admin",
+    email: "alice@example.com",
+    changePassword: false,
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  };
+
+  it("accepts a valid profile without a password change", () => {
+    expect(validateProfileForm(draft)).toEqual({});
+  });
+
+  it("reports the name and e-mail on their own fields", () => {
+    expect(validateProfileForm({ ...draft, name: "Al", email: "x" })).toEqual({
+      name: "O nome deve ter pelo menos 3 caracteres.",
+      email: "Informe um e-mail válido.",
+    });
+  });
+
+  it("ignores the password fields unless a change was requested", () => {
+    expect(
+      validateProfileForm({ ...draft, newPassword: "x", confirmPassword: "y" }),
+    ).toEqual({});
+  });
+
+  it("validates each password field when changing the password", () => {
+    expect(
+      validateProfileForm({ ...draft, changePassword: true }),
+    ).toEqual({
+      currentPassword: "Informe a senha atual.",
+      newPassword: "A nova senha deve ter pelo menos 8 caracteres.",
+    });
+
+    expect(
+      validateProfileForm({
+        ...draft,
+        changePassword: true,
+        currentPassword: "password123",
+        newPassword: "newpassword8",
+        confirmPassword: "different88",
+      }),
+    ).toEqual({ confirmPassword: "As senhas não coincidem." });
+  });
+
+  it("accepts a complete password change", () => {
+    expect(
+      validateProfileForm({
+        ...draft,
+        changePassword: true,
+        currentPassword: "password123",
+        newPassword: "newpassword8",
+        confirmPassword: "newpassword8",
+      }),
+    ).toEqual({});
   });
 });

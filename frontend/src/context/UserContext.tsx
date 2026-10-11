@@ -8,19 +8,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { buildMenu, resolveRoleLabel } from "@/lib/access";
+import type { NavSection } from "@/config/navigation";
+import { buildNavigation, resolveRoleLabel } from "@/lib/access";
 import { storage } from "@/lib/storage";
-import type { AuthProfile, MenuItem } from "@/types";
+import type { AuthProfile } from "@/types";
 
 interface UserContextValue {
   profile: AuthProfile | null;
   roleName: string;
-  menu: MenuItem[];
+  /** The sections of the user's navigation, designed for their profiles. */
+  navigation: NavSection[];
   hydrated: boolean;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  profileOpen: boolean;
-  setProfileOpen: (open: boolean) => void;
   actions: {
     setUser: (profile: AuthProfile) => void;
     clearUser: () => void;
@@ -33,15 +33,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     setProfile(storage.getProfile());
     setHydrated(true);
   }, []);
 
-  const menu = useMemo<MenuItem[]>(
-    () => (profile ? buildMenu(profile.roles ?? []) : []),
+  const navigation = useMemo<NavSection[]>(
+    () => (profile ? buildNavigation(profile.roles ?? []) : []),
     [profile],
   );
 
@@ -60,7 +59,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       clearUser: () => {
         storage.clear();
         setProfile(null);
-        setProfileOpen(false);
         setSidebarOpen(false);
       },
     }),
@@ -71,15 +69,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     () => ({
       profile,
       roleName,
-      menu,
+      navigation,
       hydrated,
       sidebarOpen,
       setSidebarOpen,
-      profileOpen,
-      setProfileOpen,
       actions,
     }),
-    [profile, roleName, menu, hydrated, sidebarOpen, profileOpen, actions],
+    [profile, roleName, navigation, hydrated, sidebarOpen, actions],
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

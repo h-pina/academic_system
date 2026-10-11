@@ -88,7 +88,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "me"]
             },
-            "description": "JWT. Returns `{ cpf, name, registrationNumber, roles }` for the authenticated user (identity taken from the token). `roles` is derived from the staff/teachers/students tables and may be empty."
+            "description": "JWT. Returns `{ cpf, name, email, registrationNumber, roles }` for the authenticated user (identity taken from the token). `roles` is derived from the staff/teachers/students tables and may be empty."
           }
         },
         {

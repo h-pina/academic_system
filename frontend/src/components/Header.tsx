@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { LogOut, UserRound } from "lucide-react";
 import BrandMark from "@/components/BrandMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useUser } from "@/context/UserContext";
 
 export default function Header() {
-  const { profile, roleName, actions, profileOpen, setProfileOpen } = useUser();
+  const { profile, roleName, actions } = useUser();
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-surface px-4 sm:px-6">
@@ -30,13 +31,14 @@ export default function Header() {
               <p className="text-xs text-slate-500">{roleName}</p>
             </div>
 
-            <button
+            <Link
+              href="/app/profile"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
-              title="Editar meus dados"
-              onClick={() => setProfileOpen(!profileOpen)}
+              title="Meus dados"
+              aria-label="Meus dados"
             >
               <UserRound className="h-5 w-5" />
-            </button>
+            </Link>
 
             <button
               onClick={() => actions.clearUser()}

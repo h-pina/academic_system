@@ -17,6 +17,7 @@ export interface LoginResponse {
 export interface AuthProfile {
   cpf: string;
   name: string;
+  email: string;
   registrationNumber: string | null;
   roles: RoleName[];
 }
@@ -24,20 +25,6 @@ export interface AuthProfile {
 export interface AccessInfo {
   hasPassword: boolean;
   name: string;
-}
-
-export interface Feature {
-  code: number;
-  label: string;
-  route: string;
-  roles: RoleName[];
-  /** Reachable by URL but not listed in the menu. */
-  hidden?: boolean;
-}
-
-export interface MenuItem {
-  route: string;
-  label: string;
 }
 
 export type MessageType = "ERROR" | "WARNING" | "SUCCESS";

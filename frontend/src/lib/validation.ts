@@ -168,3 +168,48 @@ export function validateSubjectDraft(draft: SubjectDraft): string[] {
   }
   return errors;
 }
+
+export const MIN_PASSWORD_LENGTH = 8;
+
+export interface ProfileFormDraft {
+  name: string;
+  email: string;
+  changePassword: boolean;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export type ProfileFormField =
+  | "name"
+  | "email"
+  | "currentPassword"
+  | "newPassword"
+  | "confirmPassword";
+
+/** Field-level errors of the "Meus dados" form; empty when it is valid. */
+export function validateProfileForm(
+  draft: ProfileFormDraft,
+): Partial<Record<ProfileFormField, string>> {
+  const errors: Partial<Record<ProfileFormField, string>> = {};
+
+  if (draft.name.trim().length < MIN_NAME_LENGTH) {
+    errors.name = `O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`;
+  }
+  if (!isValidEmail(draft.email)) {
+    errors.email = "Informe um e-mail válido.";
+  }
+
+  if (draft.changePassword) {
+    if (draft.currentPassword.length === 0) {
+      errors.currentPassword = "Informe a senha atual.";
+    }
+    if (draft.newPassword.length < MIN_PASSWORD_LENGTH) {
+      errors.newPassword = `A nova senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+    }
+    if (draft.confirmPassword !== draft.newPassword) {
+      errors.confirmPassword = "As senhas não coincidem.";
+    }
+  }
+  return errors;
+}

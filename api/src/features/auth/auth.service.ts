@@ -16,6 +16,7 @@ import { resolveLoginIdentifier } from '../../common/utils/identifier.util';
 export interface AuthProfile {
   cpf: string;
   name: string;
+  email: string;
   registrationNumber: string | null;
   roles: RoleName[];
 }
@@ -72,6 +73,7 @@ export class AuthService {
     return {
       cpf: user.cpf,
       name: user.name,
+      email: user.email,
       registrationNumber: user.registrationNumber,
       roles: await this.rolesService.resolveRoles(user.id),
     };
