@@ -2,13 +2,15 @@ Monorepo for the **Academic System**: an administrative system for a university
 (students, teachers, departments, courses and subjects), built as a NestJS backend
 and a Next.js web client, managed as npm workspaces.
 
-> The domain features are being built task by task; see `tasks/`. For now the
-> system provides authentication and user registration.
+It manages people (administrative staff, teachers and students), departments,
+courses, subjects and each course's curriculum with prerequisites, with
+role-based access and sign-in by CPF or matrícula. The roadmap and the
+decisions behind each feature are in [`tasks/`](tasks/00-visao-geral.md).
 
 | Workspace   | Stack                        | Default port | Description |
 |-------------|------------------------------|--------------|-------------|
-| `api`       | NestJS 10 + TypeORM (SQLite) | `3001`       | Authentication (CPF + password) and user registration. |
-| `frontend`  | Next.js (App Router)         | `3005`       | Web client that talks to `api`. |
+| `api`       | NestJS 10 + TypeORM (SQLite) | `3001`       | REST API: authentication, people, academic structure, curriculum and dashboard. |
+| `frontend`  | Next.js (App Router)         | `3005`       | Web client that talks to `api`. UI in Portuguese (pt-BR). |
 
 ## Requirements
 
@@ -64,21 +66,73 @@ Sign in with the **CPF** (11 digits) or the **matrícula** (10 digits).
 Roles are not stored: they are derived from which profile tables contain the
 user (`staff.role`, `teachers`, `students`). A user can have several roles or
 none; a user without a profile can sign in but only sees a "no link" notice.
-`admin` includes every permission of `secretary`.
+`admin` includes every permission of `secretary`. A staff or teacher profile
+grants its role only while `status = 'active'`; a student keeps the `student`
+role unless the status is `dropped`. Roles are resolved on every request, so
+deactivating a user or a profile takes effect immediately.
 
-| Route | Roles |
-|-------|-------|
-| `GET /users`, `POST /users`, `PUT /users/:cpf`, `DELETE /users/:cpf` | `admin` |
-| `GET /users/:cpf/exists` | `admin`, `secretary` |
-| `GET /auth/me`, `PUT /users/me` | any signed-in user (profile not required) |
+## API reference
+
+All routes except the public ones below need `Authorization: Bearer <token>`.
+"Any profile" means any signed-in user that has at least one role. A
+ready-to-use [Postman collection](api/postman_collection.json) covers every
+route.
+
+| Area | Route | Roles |
+|------|-------|-------|
+| Auth | `POST /auth/login` `{ identifier, password }` (CPF or matrícula) | public |
+| Auth | `GET /auth/access/:identifier`, `PUT /auth/password/reset` | public |
+| Auth | `GET /auth/me` | any signed-in user |
+| Users | `GET /users`, `GET /users/orphans`, `POST /users`, `PUT /users/:cpf`, `DELETE /users/:cpf` | `admin` |
+| Users | `GET /users/:cpf/exists` | `admin`, `secretary` |
+| Users | `PUT /users/me`, `GET /users/:cpf/email` | any signed-in user / public |
+| Staff | `GET/POST /staff`, `GET/PATCH/DELETE /staff/:id` | `admin` |
+| Students | `GET /students`, `GET /students/:id` | `admin`, `secretary`, `teacher` (a student: own record) |
+| Students | `POST /students`, `PATCH /students/:id` | `admin`, `secretary` |
+| Students | `DELETE /students/:id` | `admin` |
+| Teachers | `GET /teachers`, `GET /teachers/:id` | `admin`, `secretary`, `teacher` |
+| Teachers | `POST /teachers`, `PATCH /teachers/:id` | `admin`, `secretary` |
+| Teachers | `DELETE /teachers/:id` | `admin` |
+| Departments, courses, subjects | `GET` (list, by id) | any profile |
+| Departments, courses, subjects | `POST`, `PATCH` | `admin`, `secretary` |
+| Departments, courses, subjects | `DELETE` | `admin` |
+| Curriculum | `GET /courses/:id/curriculum` | any profile |
+| Curriculum | `POST`, `PATCH`, `DELETE /courses/:id/curriculum[/:subjectId]` | `admin`, `secretary` |
+| Prerequisites | `PUT /subjects/:id/prerequisites` | `admin`, `secretary` |
+| Dashboard | `GET /dashboard` | any profile (sections depend on roles) |
+
+List endpoints are paginated (`page`, `pageSize` up to 100) and answer
+`{ items, total, page, pageSize }`, except departments, which return an array.
+Rules enforced by the API are listed in the task files under `tasks/` and
+covered by the e2e tests in `api/test/`.
 
 ## Data model
 
 Entity-relationship diagram and deletion rules: [`docs/data-model.md`](docs/data-model.md).
 
-## Tests
+## Tests and quality checks
 
 ```bash
-npm test               # runs the API e2e tests (in-memory SQLite, no setup needed)
+npm test               # API e2e + unit tests (in-memory SQLite) and frontend unit tests
 npm run typecheck      # typechecks both workspaces
+npm run lint           # ESLint in both workspaces
+npm run build          # builds both workspaces
 ```
+
+The API tests boot the whole application on an in-memory database seeded with
+the sample data, so they need no setup and never touch `api/data/app.sqlite`.
+
+## Environment variables
+
+| Variable | Where | Default | Purpose |
+|----------|-------|---------|---------|
+| `JWT_SECRET` | `api/.env` | _(required)_ | Secret used to sign tokens |
+| `JWT_EXPIRES_IN` | `api/.env` | `1d` | Token lifetime |
+| `PORT` | `api/.env` | `3001` | API port |
+| `DATABASE_PATH` | `api/.env` | `data/app.sqlite` | SQLite file |
+| `BCRYPT_SALT_ROUNDS` | `api/.env` | `12` | Password hashing cost |
+| `SEED_ON_STARTUP` | `api/.env` | `true` outside production | Populate empty tables with the sample data |
+| `NEXT_PUBLIC_API_URL` | `frontend/.env.local` | `http://localhost:3001` | API base URL used by the browser |
+
+> Outside production the schema is created by TypeORM `synchronize`; there are
+> no migrations yet, so add them before any real deployment.

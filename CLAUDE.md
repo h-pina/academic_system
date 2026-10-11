@@ -19,6 +19,7 @@ npm run dev                               # api + frontend together
 
 npm test                                  # API e2e (Vitest + supertest, in-memory SQLite) and frontend unit tests
 npm run typecheck                         # both workspaces
+npm run lint                              # ESLint, both workspaces
 npm run build --workspace api
 npm run seed:force --workspace api        # recreate seed data
 ```
