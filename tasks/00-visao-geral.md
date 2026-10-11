@@ -82,3 +82,19 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 ## Critério de conclusão
 
 Um administrador consegue entrar, cadastrar departamento, curso, disciplinas, montar a matriz, cadastrar funcionários, professores e alunos, tudo pela interface web, e cada perfil enxerga apenas o que lhe cabe.
+
+## Fase 2: redesenho visual
+
+Fase focada em identidade visual, navegação e experiência de uso, sem novas regras de negócio. Direção escolhida: **Campus** (azul-ultramar, cantos arredondados, tema claro e escuro) com **navegação pensada por perfil**.
+
+| Tarefa | Arquivo | Tema |
+|--------|---------|------|
+| 14 | `14-tokens-de-design-e-tema.md`        | Tokens, tipografia, tema claro/escuro e marca |
+| 15 | `15-biblioteca-de-componentes.md`      | Conjunto de componentes acessíveis |
+| 16 | `16-navegacao-por-perfil.md`           | Módulos e menu específicos para cada perfil |
+| 17 | `17-estrutura-da-aplicacao.md`         | Moldura: barra lateral, cabeçalho, responsivo |
+| 18 | `18-migracao-das-telas.md`             | Todas as telas no novo padrão |
+| 19 | `19-refinamentos-de-interface.md`      | Estados, validação por campo, filtros na URL |
+| 20 | `20-verificacao-visual-e-e2e.md`       | Testes de navegador e regressão visual |
+
+Ordem: `14 → 15 → 16 → 17 → 18 → 19 → 20` (a 16 só depende da 13 e pode andar em paralelo com a 14 e a 15).
