@@ -20,7 +20,9 @@
     { "key": "staffId", "value": "6", "type": "string" },
     { "key": "staffCpf", "value": "86288366757", "type": "string" },
     { "key": "teacherId", "value": "3", "type": "string" },
-    { "key": "teacherCpf", "value": "11144477735", "type": "string" }
+    { "key": "teacherCpf", "value": "11144477735", "type": "string" },
+    { "key": "departmentId", "value": "1", "type": "string" },
+    { "key": "courseId", "value": "1", "type": "string" }
   ],
   "item": [
     {
@@ -594,6 +596,238 @@
               ]
             },
             "description": "JWT (admin). Removes only the teacher profile (204); the user stays. Prefer setting `status`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "departments"
+              ]
+            },
+            "description": "JWT (any user with a profile). Not paginated; includes `courseCount` and `teacherCount`."
+          }
+        },
+        {
+          "name": "Get department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "JWT (any user with a profile)."
+          }
+        },
+        {
+          "name": "Create department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "departments"
+              ]
+            },
+            "description": "JWT (admin, secretary). `code` is stored in upper case. 409 on duplicate name or code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Physics\",\n  \"code\": \"FIS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update department",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). `name` and/or `code`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Physics and Astronomy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "departments",
+                "{{departmentId}}"
+              ]
+            },
+            "description": "JWT (admin). 409 while it still has courses or teachers."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "JWT (any user with a profile). Paginated. Filters: `departmentId`, `status` (active|inactive), `q` (name or code), `page`, `pageSize`. Includes `studentCount`."
+          }
+        },
+        {
+          "name": "Get course",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "JWT (any user with a profile)."
+          }
+        },
+        {
+          "name": "Create course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            },
+            "description": "JWT (admin, secretary). `code` is stored in upper case; `totalSemesters` 1-20; `status` defaults to active. 409 on duplicate code, 400 on unknown department.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Physics\",\n  \"code\": \"FIS-B\",\n  \"departmentId\": 1,\n  \"totalSemesters\": 8\n}"
+            }
+          }
+        },
+        {
+          "name": "Update course",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). Lowering `totalSemesters` below a placed curriculum item returns 409. Use `status: inactive` instead of deleting.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"inactive\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete course",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}"
+              ]
+            },
+            "description": "JWT (admin). 409 while it has students; its curriculum is removed with it."
           }
         }
       ]
