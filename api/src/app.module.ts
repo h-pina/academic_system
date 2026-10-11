@@ -10,6 +10,7 @@ import { DepartmentsModule } from './features/departments/departments.module';
 import { CoursesModule } from './features/courses/courses.module';
 import { SubjectsModule } from './features/subjects/subjects.module';
 import { DatabaseModule } from './common/database/database.module';
+import { DashboardModule } from './features/dashboard/dashboard.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { SeedModule } from './seed/seed.module';
     DepartmentsModule,
     CoursesModule,
     SubjectsModule,
+    DashboardModule,
     SeedModule,
   ],
 })

@@ -7,6 +7,7 @@ import {
   Building2,
   ClipboardList,
   GraduationCap,
+  IdCard,
   Library,
   Presentation,
   Users,
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 const ROUTE_ICONS: Record<string, LucideIcon> = {
   "register-users": Users,
+  staff: IdCard,
   students: GraduationCap,
   teachers: Presentation,
   departments: Building2,

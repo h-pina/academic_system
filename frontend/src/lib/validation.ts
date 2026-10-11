@@ -39,6 +39,13 @@ function validatePerson(draft: PersonFields, existingUser: boolean): string[] {
   return errors;
 }
 
+export function validateStaffDraft(
+  draft: PersonFields,
+  options: { existingUser: boolean },
+): string[] {
+  return validatePerson(draft, options.existingUser);
+}
+
 export interface StudentDraft extends PersonFields {
   courseId: number;
   entryYear: number | "";

@@ -68,3 +68,51 @@ describe("resolveRoleLabel", () => {
     expect(resolveRoleLabel([])).toBe("");
   });
 });
+
+describe("menu for each role (navigation matrix)", () => {
+  const routes = (roles: Parameters<typeof buildMenu>[0]) =>
+    buildMenu(roles).map((item) => item.route);
+
+  it("shows everything to the admin", () => {
+    expect(routes(["admin"]).sort()).toEqual(
+      [
+        "courses",
+        "departments",
+        "register-users",
+        "staff",
+        "students",
+        "subjects",
+        "teachers",
+      ].sort(),
+    );
+  });
+
+  it("shows the secretary the academic modules but not user or staff management", () => {
+    expect(routes(["secretary"]).sort()).toEqual(
+      ["courses", "departments", "students", "subjects", "teachers"].sort(),
+    );
+  });
+
+  it("shows the teacher the same read-only modules as the secretary", () => {
+    expect(routes(["teacher"]).sort()).toEqual(routes(["secretary"]).sort());
+  });
+
+  it("shows the student only courses, departments and subjects", () => {
+    expect(routes(["student"]).sort()).toEqual(
+      ["courses", "departments", "subjects"].sort(),
+    );
+  });
+
+  it("unions the modules of a user with several roles", () => {
+    expect(routes(["student", "teacher"]).sort()).toEqual(
+      ["courses", "departments", "students", "subjects", "teachers"].sort(),
+    );
+  });
+
+  it("blocks direct access to modules a role does not have", () => {
+    expect(canAccessRoute(["student"], "students")).toBe(false);
+    expect(canAccessRoute(["student"], "staff")).toBe(false);
+    expect(canAccessRoute(["secretary"], "register-users")).toBe(false);
+    expect(canAccessRoute(["teacher"], "courses")).toBe(true);
+  });
+});

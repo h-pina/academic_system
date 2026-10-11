@@ -1082,6 +1082,28 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard"
+              ]
+            },
+            "description": "JWT (any user with a profile). Returns `roles` plus the sections that match them: `institution` (admin/secretary: active students, teachers, courses, subjects, departments, students by course), `teacher` (own department and its courses) and `student` (own course, entry year, status and curriculum workload). A user with several profiles gets several sections."
+          }
+        }
+      ]
     }
   ]
 }

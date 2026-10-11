@@ -3,6 +3,7 @@ import {
   isValidCode,
   validateCourseDraft,
   validateDepartmentDraft,
+  validateStaffDraft,
   validateStudentDraft,
   validateSubjectDraft,
   validateTeacherDraft,
@@ -147,5 +148,19 @@ describe("validateSubjectDraft", () => {
     expect(
       validateSubjectDraft({ ...subject, description: "x".repeat(501) }),
     ).toHaveLength(1);
+  });
+});
+
+describe("validateStaffDraft", () => {
+  const person = { cpf: "123.456.789-09", name: "Ana Souza", email: "ana@example.com" };
+
+  it("accepts a complete draft", () => {
+    expect(validateStaffDraft(person, { existingUser: false })).toEqual([]);
+  });
+
+  it("requires name and e-mail only for a new person", () => {
+    const blank = { ...person, name: "", email: "" };
+    expect(validateStaffDraft(blank, { existingUser: false })).toHaveLength(2);
+    expect(validateStaffDraft(blank, { existingUser: true })).toEqual([]);
   });
 });

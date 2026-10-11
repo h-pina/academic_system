@@ -146,3 +146,49 @@ export interface CurriculumView {
   totalWorkloadHours: number;
   semesters: CurriculumSemester[];
 }
+
+export interface InstitutionOverview {
+  activeStudents: number;
+  activeTeachers: number;
+  activeCourses: number;
+  subjects: number;
+  departments: number;
+  studentsByCourse: {
+    courseId: number;
+    courseName: string;
+    courseCode: string;
+    activeStudents: number;
+  }[];
+}
+
+export interface TeacherOverview {
+  department: {
+    id: number;
+    name: string;
+    code: string;
+    activeTeachers: number;
+    activeStudents: number;
+  };
+  courses: { id: number; name: string; code: string; activeStudents: number }[];
+}
+
+export interface StudentOverview {
+  registrationNumber: string | null;
+  entryYear: number;
+  status: StudentStatus;
+  course: {
+    id: number;
+    name: string;
+    code: string;
+    departmentName: string;
+    totalSemesters: number;
+    curriculumWorkloadHours: number;
+  };
+}
+
+export interface DashboardData {
+  roles: RoleName[];
+  institution?: InstitutionOverview;
+  teacher?: TeacherOverview;
+  student?: StudentOverview;
+}

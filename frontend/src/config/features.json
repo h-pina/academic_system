@@ -6,6 +6,12 @@
     "roles": ["admin"]
   },
   {
+    "code": 7,
+    "label": "Funcionários",
+    "route": "staff",
+    "roles": ["admin"]
+  },
+  {
     "code": 2,
     "label": "Alunos",
     "route": "students",
