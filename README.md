@@ -11,6 +11,7 @@ decisions behind each feature are in [`tasks/`](tasks/00-visao-geral.md).
 |-------------|------------------------------|--------------|-------------|
 | `api`       | NestJS 10 + TypeORM (SQLite) | `3001`       | REST API: authentication, people, academic structure, curriculum and dashboard. |
 | `frontend`  | Next.js (App Router)         | `3005`       | Web client that talks to `api`. UI in Portuguese (pt-BR). |
+| `e2e`       | Puppeteer + pixelmatch       |              | Browser flows and visual regression (see below). |
 
 ## Requirements
 
@@ -125,6 +126,17 @@ npm run build          # builds both workspaces
 
 The API tests boot the whole application on an in-memory database seeded with
 the sample data, so they need no setup and never touch `api/data/app.sqlite`.
+
+### Browser tests
+
+```bash
+npm run test:e2e            # real-browser flows and visual regression
+npm run test:visual:update  # rewrite the reference screenshots
+```
+
+They need a browser (`BROWSER_PATH`, or `firefox`/`chromium`/`chrome` on the
+`PATH`) and skip with a warning without one. Details, the screenshot
+tolerance and how to update references: [`e2e/README.md`](e2e/README.md).
 
 ## Environment variables
 

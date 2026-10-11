@@ -1,0 +1,15 @@
+{
+  "name": "academic-system-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser tests (flows and visual regression) for the Academic System",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^23.11.0"
+  }
+}

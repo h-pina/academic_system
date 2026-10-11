@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "api",
-    "frontend"
+    "frontend",
+    "e2e"
   ],
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
@@ -13,9 +14,12 @@
     "build": "npm run build --workspaces --if-present",
     "start:api": "npm run start:prod --workspace api",
     "seed": "npm run seed --workspace api",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspace api --workspace frontend --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test:e2e": "node e2e/run.mjs",
+    "test:visual": "node e2e/run.mjs --only visual",
+    "test:visual:update": "node e2e/run.mjs --only visual --update"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"

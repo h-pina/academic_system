@@ -104,7 +104,7 @@ Pure logic (sidebar state, active item, breadcrumbs, shortcuts) is in
 ## Status
 
 Tokens, themes, fonts, brand mark, the component library, per-profile
-navigation, the application shell and every screen are on the library. No
-screen uses legacy CSS or hand-made modals. Polish that remains is the scope of
-task 19 (field-level API errors, filters in the URL, sorting) and the browser
-suite of task 20.
+navigation, the application shell and every screen are on the library, with
+field-level errors, URL-backed lists and sorting. The look is guarded by the
+visual regression suite in `e2e/`: a visual change that is intended is
+accepted by updating the references (`npm run test:visual:update`).

@@ -33,4 +33,5 @@
 ## Verification before finishing
 
 - Run in the affected workspace before calling work done: `npm run typecheck`, `npm run lint`, `npm run build` and `npm test`.
+- When a change touches the interface (screens, components, tokens, navigation), also run `npm run test:e2e` if a browser is available. A visual diff that is intended is accepted by updating the references (`npm run test:visual:update`) in the same change; one that is not intended is a bug.
 - Report failures with their output; do not mark a task done or merge while they fail.

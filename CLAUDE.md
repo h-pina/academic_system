@@ -20,6 +20,7 @@ npm run dev                               # api + frontend together
 npm test                                  # API e2e (Vitest + supertest, in-memory SQLite) and frontend unit tests
 npm run typecheck                         # both workspaces
 npm run lint                              # ESLint, both workspaces
+npm run test:e2e                          # browser flows + visual regression (needs a browser)
 npm run build --workspace api
 npm run seed:force --workspace api        # recreate seed data
 ```
@@ -30,6 +31,7 @@ npm run seed:force --workspace api        # recreate seed data
 - `.claude/rules/`: language, git, workflow and code conventions. Follow them.
 - `docs/navigation.md`: navigation per profile (defined in `frontend/src/config/navigation.ts`; UI restriction only, the API guards are the security boundary).
 - `docs/design-system.md`: visual identity, tokens and theming (values live in `frontend/src/styles/tokens.ts`; never hard-code colours in components).
+- `e2e/`: real-browser flows and screenshot regression (`npm run test:e2e`, `npm run test:visual:update`); needs `BROWSER_PATH` or firefox/chromium on PATH, skips otherwise. See `e2e/README.md`.
 - `api/test/`: e2e tests; `api/vitest.config.ts` configures the runner (SWC for decorator metadata).
 
 ## Key decisions

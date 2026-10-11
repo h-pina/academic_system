@@ -44,3 +44,6 @@ Thumbs.db
 # Misc
 *.pem
 .vercel
+
+# Browser tests
+e2e/__diffs__/
