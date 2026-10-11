@@ -27,16 +27,16 @@ Implementar o CRUD de alunos na API. O aluno é uma extensão de `users` (`stude
 
 ## Checklist
 
-- [ ] Criar módulo `students` (entity, DTOs com `class-validator`, repository, service, controller)
-- [ ] `POST` em **transação**: reaproveita o `users` se o CPF já existir; senão cria `users` sem senha (definida no primeiro acesso) e depois `students`
-- [ ] Rejeitar (409) se o usuário já tem linha em `students`
-- [ ] Gerar a matrícula em `users.registrationNumber` no formato `AAAA` + 6 dígitos sequenciais por ano (`AAAA` = `entryYear`), dentro da mesma transação do `POST`; não aceitar valor informado pelo cliente
-- [ ] Se o usuário já tiver `registrationNumber` (ex.: já é professor), manter o existente
-- [ ] Validar que `courseId` existe e está ativo
-- [ ] Aplicar `@Roles` conforme a tabela
-- [ ] Aluno só enxerga o próprio registro
-- [ ] Encerrar vínculo por `status` (inativar); o `DELETE` só remove a linha de `students`, nunca o `users`
-- [ ] Adicionar rotas à coleção do Postman
+- [x] Criar módulo `students` (entity, DTOs com `class-validator`, repository, service, controller)
+- [x] `POST` em **transação**: reaproveita o `users` se o CPF já existir; senão cria `users` sem senha (definida no primeiro acesso) e depois `students`
+- [x] Rejeitar (409) se o usuário já tem linha em `students`
+- [x] Gerar a matrícula em `users.registrationNumber` no formato `AAAA` + 6 dígitos sequenciais por ano (`AAAA` = `entryYear`), dentro da mesma transação do `POST`; não aceitar valor informado pelo cliente
+- [x] Se o usuário já tiver `registrationNumber` (ex.: já é professor), manter o existente
+- [x] Validar que `courseId` existe e está ativo
+- [x] Aplicar `@Roles` conforme a tabela
+- [x] Aluno só enxerga o próprio registro
+- [x] Encerrar vínculo por `status` (inativar); o `DELETE` só remove a linha de `students`, nunca o `users`
+- [x] Adicionar rotas à coleção do Postman
 
 ## Critérios de aceite
 
@@ -46,3 +46,11 @@ Implementar o CRUD de alunos na API. O aluno é uma extensão de `users` (`stude
 - Curso inexistente retorna 400/404 com mensagem clara.
 - Aluno não acessa dados de outro aluno (403).
 - Testes de service cobrindo criação, reaproveitamento de usuário, duplicidade e permissão.
+
+## Decisões tomadas na implementação
+
+- Infraestrutura compartilhada criada aqui para as tarefas 04b e 05: `TransactionService` (transações serializadas, necessárias porque o SQLite usa uma única conexão), `UserProvisioningService` (`findOrCreate` do usuário e emissão da matrícula) e `PaginationQueryDto`.
+- `POST /students`: `name` e `email` só são obrigatórios quando o CPF ainda não existe; para um CPF já cadastrado, os dados do usuário existente são mantidos.
+- A matrícula usa `entryYear` como prefixo; alterar `entryYear` depois **não** altera a matrícula já emitida.
+- Resposta da listagem: `{ items, total, page, pageSize }`, ordenada por nome.
+- Aluno sem permissão para outro aluno recebe 403; a listagem é restrita a `admin`, `secretary` e `teacher`.

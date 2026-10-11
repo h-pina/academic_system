@@ -9,6 +9,7 @@ import { StudentsModule } from './features/students/students.module';
 import { DepartmentsModule } from './features/departments/departments.module';
 import { CoursesModule } from './features/courses/courses.module';
 import { SubjectsModule } from './features/subjects/subjects.module';
+import { DatabaseModule } from './common/database/database.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { SeedModule } from './seed/seed.module';
         synchronize: config.get<string>('NODE_ENV') !== 'production',
       }),
     }),
+    DatabaseModule,
     UsersModule,
     AuthModule,
     StaffModule,

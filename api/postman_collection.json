@@ -14,7 +14,9 @@
     { "key": "cpf", "value": "12345678909", "type": "string" },
     { "key": "password", "value": "password123", "type": "string" },
     { "key": "newPassword", "value": "newpassword8", "type": "string" },
-    { "key": "targetCpf", "value": "32165498791", "type": "string" }
+    { "key": "targetCpf", "value": "32165498791", "type": "string" },
+    { "key": "studentId", "value": "5", "type": "string" },
+    { "key": "studentCpf", "value": "39053344705", "type": "string" }
   ],
   "item": [
     {
@@ -207,6 +209,127 @@
               "path": ["users", "{{targetCpf}}"]
             },
             "description": "JWT. Deletes the user. Returns 204 No Content. Targets `{{targetCpf}}` so it won't remove a seeded account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "List students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "JWT (admin, secretary, teacher). Paginated. Filters: `courseId`, `status` (active|locked|graduated|dropped), `q` (name, matrícula or CPF), `page`, `pageSize` (max 100)."
+          }
+        },
+        {
+          "name": "Get student",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{studentId}}"
+              ]
+            },
+            "description": "JWT. `:id` is the user id. Staff and teachers see anyone; a student only sees themselves (403 otherwise)."
+          }
+        },
+        {
+          "name": "Create student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students"
+              ]
+            },
+            "description": "JWT (admin, secretary). Creates the user (without password) when the CPF is new, reuses it otherwise, issues the matrícula (`entryYear` + 6 digits) and creates the student in one transaction. `name` and `email` are required only for a new CPF. 409 if the person is already a student.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{studentCpf}}\",\n  \"name\": \"Grace Hopper\",\n  \"email\": \"grace@example.com\",\n  \"courseId\": 1,\n  \"entryYear\": 2026\n}"
+            }
+          }
+        },
+        {
+          "name": "Update student",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{studentId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). Any of `courseId` (must be active), `entryYear`, `status`. The matrícula never changes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"locked\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete student profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/students/{{studentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "students",
+                "{{studentId}}"
+              ]
+            },
+            "description": "JWT (admin). Removes only the student profile (204); the user stays. Prefer setting `status`."
           }
         }
       ]

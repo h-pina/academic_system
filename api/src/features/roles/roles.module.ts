@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { StaffModule } from '../staff/staff.module';
-import { TeachersModule } from '../teachers/teachers.module';
-import { StudentsModule } from '../students/students.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Staff } from '../staff/entities/staff.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { Student } from '../students/entities/student.entity';
 import { RolesService } from './roles.service';
 
 @Module({
-  imports: [StaffModule, TeachersModule, StudentsModule],
+  imports: [TypeOrmModule.forFeature([Staff, Teacher, Student])],
   providers: [RolesService],
   exports: [RolesService],
 })
