@@ -40,3 +40,4 @@ Criar as telas de departamentos, cursos, disciplinas e montagem da matriz curric
 - `useAllItems` percorre todas as páginas da API (limite de 100 por página) para pickers e selects, evitando listas truncadas.
 - Alunos e professores veem cursos, disciplinas, departamentos e matriz em modo somente leitura; criar/editar aparece para `admin` e `secretary`, excluir só para `admin`.
 - Mensagens de erro vindas da API continuam em inglês (tarefa 13).
+- Corrigido após teste em navegador real: quando a API recusa os pré-requisitos (ex.: ciclo), a mensagem única inclui o motivo (`prerequisiteFailureMessage`); antes, um aviso genérico substituía o erro específico.

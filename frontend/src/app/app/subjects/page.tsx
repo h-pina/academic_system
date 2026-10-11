@@ -14,6 +14,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useEffect } from "react";
+import { prerequisiteFailureMessage } from "@/lib/messages";
 import type { SubjectView } from "@/types";
 
 const PAGE_SIZE = 20;
@@ -68,17 +69,18 @@ export default function SubjectsPage() {
     const changed = before.join(",") !== after.join(",");
 
     if (changed) {
+      // Silent: the single message below carries the API's reason (e.g. a
+      // dependency cycle), which a second message would otherwise replace.
       const linked = await request(`/subjects/${saved.data.id}/prerequisites`, {
         method: "PUT",
         body: JSON.stringify({ prerequisiteIds }),
+        silent: true,
       });
       if (!linked.ok) {
         setSaving(false);
         showMessage({
           type: "WARNING",
-          messages: [
-            "A disciplina foi salva, mas os pré-requisitos não foram aplicados.",
-          ],
+          messages: [prerequisiteFailureMessage(linked.error)],
         });
         setForm(null);
         reload();
