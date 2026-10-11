@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { CurrentUser } from './current-user.decorator';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { AuthWithoutProfile } from './roles.decorator';
+import { CurrentAuthUser } from './current-user.decorator';
+import { AuthUser } from './auth-user.interface';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from '../users/dto/change-password.dto';
@@ -9,24 +10,24 @@ import { ResetPasswordDto } from '../users/dto/change-password.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('access/:cpf')
-  checkAccess(@Param('cpf') cpf: string) {
-    return this.authService.checkAccess(cpf);
+  @Get('access/:identifier')
+  checkAccess(@Param('identifier') identifier: string) {
+    return this.authService.checkAccess(identifier);
   }
 
   @Post('login')
   login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.cpf, dto.password);
+    return this.authService.login(dto.identifier, dto.password);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @AuthWithoutProfile()
   @Get('me')
-  getProfile(@CurrentUser() cpf: string) {
-    return this.authService.getProfile(cpf);
+  getProfile(@CurrentAuthUser() user: AuthUser) {
+    return this.authService.getProfile(user.userId);
   }
 
   @Put('password/reset')
   resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto.cpf, dto.newPassword);
+    return this.authService.resetPassword(dto.identifier, dto.newPassword);
   }
 }

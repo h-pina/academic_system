@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { LoginIdentifier } from '../../common/utils/identifier.util';
 import { Staff } from '../staff/entities/staff.entity';
 import { Teacher } from '../teachers/entities/teacher.entity';
 import { Student } from '../students/entities/student.entity';
@@ -31,6 +32,19 @@ export class UsersRepository {
       .getMany();
   }
 
+  findById(id: number): Promise<User | null> {
+    return this.users.findOne({ where: { id } });
+  }
+
+  findByIdentifier(identifier: LoginIdentifier): Promise<User | null> {
+    return this.users.findOne({
+      where:
+        identifier.type === 'cpf'
+          ? { cpf: identifier.value }
+          : { registrationNumber: identifier.value },
+    });
+  }
+
   findByCpf(cpf: string): Promise<User | null> {
     return this.users.findOne({ where: { cpf } });
   }
@@ -51,7 +65,6 @@ export class UsersRepository {
     cpf: string;
     name: string;
     email: string;
-    roleId: number;
     passwordHash: string | null;
   }): Promise<void> {
     await this.users.insert(user);
@@ -59,7 +72,7 @@ export class UsersRepository {
 
   async updateDetails(
     cpf: string,
-    data: { name: string; email: string; roleId: number },
+    data: { name: string; email: string },
   ): Promise<void> {
     await this.users.update({ cpf }, data);
   }

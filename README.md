@@ -34,14 +34,30 @@ SQLite file at `api/data/app.sqlite` and seeds it with the baseline data below.
 
 Seeded automatically into an empty database by `api` (`api/src/seed/seed-data.ts`).
 The CPFs have valid check digits but do not belong to real people. Sign in with
-the **CPF** (digits only) and password.
+the **CPF** or **matrícula** and password.
 
-| CPF           | Name          | Role (`roleId`)     | Password      |
-|---------------|---------------|---------------------|---------------|
-| `12345678909` | Alice Admin   | Administrator (1)   | `password123` |
-| `98765432100` | Bob Manager   | Manager (2)         | `password123` |
-| `11122233396` | Carol Analyst | Analyst (3)         | `password123` |
-| `45678912364` | Dave Pending  | Analyst (3)         | _(none — set on first login via the "set your password" flow)_ |
+| CPF           | Matrícula    | Name          | Role (derived from profile) | Password      |
+|---------------|--------------|---------------|-----------------------------|---------------|
+| `12345678909` |              | Alice Admin   | `admin`                     | `password123` |
+| `98765432100` |              | Bob Secretary | `secretary`                 | `password123` |
+| `11122233396` |              | Carol Teacher | `teacher`                   | `password123` |
+| `11144477735` | `2026000001` | Erin Student  | `student`                   | `password123` |
+| `45678912364` |              | Dave Pending  | _(none: no profile linked)_ | _(none — set on first login via the "set your password" flow)_ |
+
+Sign in with the **CPF** (11 digits) or the **matrícula** (10 digits).
+
+## Roles
+
+Roles are not stored: they are derived from which profile tables contain the
+user (`staff.role`, `teachers`, `students`). A user can have several roles or
+none; a user without a profile can sign in but only sees a "no link" notice.
+`admin` includes every permission of `secretary`.
+
+| Route | Roles |
+|-------|-------|
+| `GET /users`, `POST /users`, `PUT /users/:cpf`, `DELETE /users/:cpf` | `admin` |
+| `GET /users/:cpf/exists` | `admin`, `secretary` |
+| `GET /auth/me`, `PUT /users/me` | any signed-in user (profile not required) |
 
 ## Data model
 

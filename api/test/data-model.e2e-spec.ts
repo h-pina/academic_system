@@ -35,7 +35,6 @@ describe('Data model constraints', () => {
       cpf: nextCpf(),
       name: `Person ${n}`,
       email: `person${n}@example.com`,
-      roleId: 3,
       passwordHash: null,
       registrationNumber: null,
       ...overrides,

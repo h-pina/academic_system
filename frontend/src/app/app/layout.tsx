@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import ContentHeader from "@/components/ContentHeader";
 import Header from "@/components/Header";
+import NoProfileNotice from "@/components/NoProfileNotice";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ProfileModal from "@/components/ProfileModal";
 import Sidebar from "@/components/Sidebar";
 import { useUser } from "@/context/UserContext";
-import { resolvePageTitle } from "@/lib/access";
+import { useApi } from "@/hooks/useApi";
+import { canAccessRoute, resolvePageTitle } from "@/lib/access";
+import type { AuthProfile } from "@/types";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -20,11 +23,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     sidebarOpen,
     setSidebarOpen,
     profileOpen,
+    actions,
   } = useUser();
+  const { request } = useApi();
+  const refreshed = useRef(false);
 
   useEffect(() => {
     if (hydrated && !profile) router.replace("/login");
   }, [hydrated, profile, router]);
+
+  // Roles are derived on the server and can change after sign-in (e.g. a
+  // profile is linked or deactivated), so refresh them once per page load.
+  useEffect(() => {
+    if (!hydrated || !profile || refreshed.current) return;
+    refreshed.current = true;
+    (async () => {
+      const result = await request<AuthProfile>("/auth/me", { silent: true });
+      if (result.ok) actions.setUser(result.data);
+    })();
+  }, [hydrated, profile, request, actions]);
+
+  const roles = profile?.roles ?? [];
+  const currentRoute = pathname.replace("/app/", "").split("/")[0];
+  const isHome = pathname === "/app";
+  const forbidden = !isHome && !canAccessRoute(roles, currentRoute);
+
+  useEffect(() => {
+    if (hydrated && profile && roles.length > 0 && forbidden) {
+      router.replace("/app");
+    }
+  }, [hydrated, profile, roles.length, forbidden, router]);
 
   if (!hydrated || !profile) {
     return (
@@ -34,9 +62,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isHome = pathname === "/app";
-  const currentRoute = pathname.replace("/app/", "").split("/")[0];
   const title = resolvePageTitle(currentRoute);
+
+  if (roles.length === 0) {
+    return (
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
+        <Header />
+        <main className="flex-1 overflow-auto">
+          <NoProfileNotice />
+        </main>
+        {profileOpen && <ProfileModal />}
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
@@ -67,7 +105,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
 
           <div className="flex-1 overflow-auto">
-            <div className="mx-auto h-full w-full max-w-6xl">{children}</div>
+            <div className="mx-auto h-full w-full max-w-6xl">
+              {forbidden ? null : children}
+            </div>
           </div>
         </main>
       </div>

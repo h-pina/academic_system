@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS users (
   registration_number  TEXT     UNIQUE,            -- matricula: YYYY + 6 digits, optional
   name                 TEXT     NOT NULL,
   email                TEXT     NOT NULL UNIQUE,
-  role_id              INTEGER  NOT NULL,          -- TRANSITIONAL: removed in task 02
   password_hash        TEXT,                       -- bcrypt; NULL until first access
   active               INTEGER  NOT NULL DEFAULT 1,
   CHECK (length(cpf) = 11 AND cpf NOT GLOB '*[^0-9]*'),

@@ -8,15 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { buildMenu, ROLES, resolveRoleName } from "@/lib/access";
+import { buildMenu, resolveRoleLabel } from "@/lib/access";
 import { storage } from "@/lib/storage";
-import type { AuthProfile, MenuItem, Role } from "@/types";
+import type { AuthProfile, MenuItem } from "@/types";
 
 interface UserContextValue {
   profile: AuthProfile | null;
   roleName: string;
   menu: MenuItem[];
-  roles: Role[];
   hydrated: boolean;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -42,12 +41,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const menu = useMemo<MenuItem[]>(
-    () => (profile ? buildMenu(profile.roleId) : []),
+    () => (profile ? buildMenu(profile.roles ?? []) : []),
     [profile],
   );
 
   const roleName = useMemo(
-    () => (profile ? resolveRoleName(profile.roleId) : ""),
+    () => (profile ? resolveRoleLabel(profile.roles ?? []) : ""),
     [profile],
   );
 
@@ -73,7 +72,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       profile,
       roleName,
       menu,
-      roles: ROLES,
       hydrated,
       sidebarOpen,
       setSidebarOpen,

@@ -12,6 +12,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateOwnProfileDto } from './dto/update-own-profile.dto';
 import { PublicUser, UserRecord } from './entities/user.entity';
 import { sanitizeCpf } from '../../common/utils/cpf.util';
+import { RolesService } from '../roles/roles.service';
+import { RoleName } from '../../common/domain/roles';
 
 @Injectable()
 export class UsersService {
@@ -19,14 +21,21 @@ export class UsersService {
 
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly rolesService: RolesService,
     config: ConfigService,
   ) {
     this.saltRounds = Number(config.get('BCRYPT_SALT_ROUNDS') ?? 12);
   }
 
-  async findAll(): Promise<PublicUser[]> {
+  async findAll(): Promise<UserWithRoles[]> {
     const users = await this.usersRepository.findAll();
-    return users.map(toPublicUser);
+    const roles = await this.rolesService.resolveRolesFor(
+      users.map((user) => user.id),
+    );
+    return users.map((user) => ({
+      ...toPublicUser(user),
+      roles: roles.get(user.id) ?? [],
+    }));
   }
 
   async exists(cpf: string): Promise<boolean> {
@@ -56,7 +65,6 @@ export class UsersService {
       cpf,
       name: dto.name,
       email: dto.email,
-      roleId: dto.roleId,
       passwordHash,
     });
   }
@@ -117,6 +125,8 @@ export class UsersService {
     }
   }
 }
+
+export type UserWithRoles = PublicUser & { roles: RoleName[] };
 
 function toPublicUser(user: UserRecord): PublicUser {
   const { passwordHash: _passwordHash, ...publicUser } = user;

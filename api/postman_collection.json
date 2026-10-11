@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Academic System API",
-    "description": "API for the Academic System (authentication and users).\n\n## Getting started\n1. Start the API: `npm run start:dev` (defaults to http://localhost:3001). On first boot an empty database is created and seeded (see `src/seed/`).\n2. Run **Auth > Login**. The default `cpf` / `password` variables match the seeded `Alice Admin` account (`12345678909` / `password123`). The login test script stores the JWT in the `accessToken` collection variable, which every protected request uses automatically via collection-level Bearer auth.\n\n## Seeded accounts\n- `12345678909` / `password123` - Alice Admin (roleId 1)\n- `98765432100` / `password123` - Bob Manager (roleId 2)\n- `11122233396` / `password123` - Carol Analyst (roleId 3)\n- `45678912364` - Dave Pending, no password set (use for the access-check / reset flow)\n\n## Variables\n- `baseUrl` - API origin, default `http://localhost:3001`\n- `accessToken` - populated by Auth > Login\n- `cpf` - CPF used across requests (default is the seeded Alice Admin)\n- `password` / `newPassword` - credentials for the login / reset flows\n\nPublic routes (`POST /auth/login`, `GET /auth/access/:cpf`, `PUT /auth/password/reset`, `GET /users/:cpf/email`) override auth to \"No Auth\".",
+    "description": "API for the Academic System (authentication and users).\n\n## Getting started\n1. Start the API: `npm run start:dev` (defaults to http://localhost:3001). On first boot an empty database is created and seeded (see `src/seed/`).\n2. Run **Auth > Login**. The default `cpf` / `password` variables match the seeded `Alice Admin` account (`12345678909` / `password123`). The login test script stores the JWT in the `accessToken` collection variable, which every protected request uses automatically via collection-level Bearer auth.\n\n## Seeded accounts\n- `12345678909` / `password123` - Alice Admin (admin)\n- `98765432100` / `password123` - Bob Secretary (secretary)\n- `11122233396` / `password123` - Carol Teacher (teacher)\n- `11144477735` or `2026000001` / `password123` - Erin Student (student; logs in with CPF or matrícula)\n- `45678912364` - Dave Pending, no password and no profile (use for the access-check / reset flow)\n\n## Variables\n- `baseUrl` - API origin, default `http://localhost:3001`\n- `accessToken` - populated by Auth > Login\n- `cpf` - CPF used across requests (default is the seeded Alice Admin)\n- `password` / `newPassword` - credentials for the login / reset flows\n\nPublic routes (`POST /auth/login`, `GET /auth/access/:identifier`, `PUT /auth/password/reset`, `GET /users/:cpf/email`) override auth to \"No Auth\".",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -45,7 +45,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"{{cpf}}\",\n  \"password\": \"{{password}}\"\n}"
+              "raw": "{\n  \"identifier\": \"{{cpf}}\",\n  \"password\": \"{{password}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -56,7 +56,7 @@
           }
         },
         {
-          "name": "Check access (by CPF)",
+          "name": "Check access (by CPF or matrícula)",
           "request": {
             "auth": { "type": "noauth" },
             "method": "GET",
@@ -79,7 +79,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "me"]
             },
-            "description": "JWT. Returns `{ cpf, name, roleId }` for the authenticated user (identity taken from the token)."
+            "description": "JWT. Returns `{ cpf, name, registrationNumber, roles }` for the authenticated user (identity taken from the token). `roles` is derived from the staff/teachers/students tables and may be empty."
           }
         },
         {
@@ -90,7 +90,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"45678912364\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
+              "raw": "{\n  \"identifier\": \"45678912364\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/password/reset",
@@ -152,14 +152,14 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cpf\": \"{{targetCpf}}\",\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"roleId\": 1,\n  \"password\": \"newpassword8\"\n}"
+              "raw": "{\n  \"cpf\": \"{{targetCpf}}\",\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"password\": \"newpassword8\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users",
               "host": ["{{baseUrl}}"],
               "path": ["users"]
             },
-            "description": "JWT. Creates a user (uses `{{targetCpf}}`, which is not seeded, so this succeeds on a fresh DB). `password` is optional (min 8 chars if supplied); `name` min 3 chars; `email` must be valid and unique; `roleId` integer >= 1. Returns 201. Unknown body properties are rejected (global ValidationPipe with `forbidNonWhitelisted`)."
+            "description": "JWT. Creates a user (uses `{{targetCpf}}`, which is not seeded, so this succeeds on a fresh DB). `password` is optional (min 8 chars if supplied); `name` min 3 chars; `email` must be valid and unique. The user is created without a profile (admin only). Returns 201. Unknown body properties are rejected (global ValidationPipe with `forbidNonWhitelisted`)."
           }
         },
         {
@@ -186,14 +186,14 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"roleId\": 1\n}"
+              "raw": "{\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{targetCpf}}",
               "host": ["{{baseUrl}}"],
               "path": ["users", "{{targetCpf}}"]
             },
-            "description": "JWT. Admin-style update of another user's name/email/role. All three fields required. Run **Create user** first so `{{targetCpf}}` exists."
+            "description": "JWT. Admin-only update of another user's name/email. Both fields required. Run **Create user** first so `{{targetCpf}}` exists."
           }
         },
         {

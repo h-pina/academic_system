@@ -6,12 +6,12 @@ import { ArrowLeft, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { useMessage } from "@/context/MessageContext";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
-import { sanitizeCpf } from "@/lib/cpf";
+import { normalizeLoginIdentifier } from "@/lib/identifier";
 import { storage } from "@/lib/storage";
 import type { AccessInfo, AuthProfile, LoginResponse } from "@/types";
 
 interface IdentifiedUser {
-  cpf: string;
+  identifier: string;
   name: string;
   hasPassword: boolean;
 }
@@ -22,7 +22,7 @@ export default function LoginPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
 
-  const [cpf, setCpf] = useState("");
+  const [identifierInput, setIdentifierInput] = useState("");
   const [identified, setIdentified] = useState<IdentifiedUser | null>(null);
   const [resetting, setResetting] = useState(false);
   const [password, setPassword] = useState("");
@@ -37,23 +37,21 @@ export default function LoginPage() {
 
   const handleCheckCpf = async (event: FormEvent) => {
     event.preventDefault();
-    const cleanCpf = sanitizeCpf(cpf);
+    const normalized = normalizeLoginIdentifier(identifierInput);
 
-    if (cleanCpf.length !== 11) {
-      showMessage({
-        type: "WARNING",
-        messages: ["The CPF must contain 11 digits."],
-      });
+    if (!normalized.ok) {
+      showMessage({ type: "WARNING", messages: [normalized.error] });
       return;
     }
 
-    const result = await request<AccessInfo>(`/auth/access/${cleanCpf}`, {
-      auth: false,
-    });
+    const result = await request<AccessInfo>(
+      `/auth/access/${normalized.value}`,
+      { auth: false },
+    );
     if (!result.ok) return;
 
     setIdentified({
-      cpf: cleanCpf,
+      identifier: normalized.value,
       name: result.data.name,
       hasPassword: result.data.hasPassword,
     });
@@ -82,7 +80,10 @@ export default function LoginPage() {
       const reset = await request(`/auth/password/reset`, {
         method: "PUT",
         auth: false,
-        body: JSON.stringify({ cpf: identified.cpf, newPassword: password }),
+        body: JSON.stringify({
+          identifier: identified.identifier,
+          newPassword: password,
+        }),
       });
       if (!reset.ok) return;
 
@@ -95,7 +96,7 @@ export default function LoginPage() {
     const login = await request<LoginResponse>(`/auth/login`, {
       method: "POST",
       auth: false,
-      body: JSON.stringify({ cpf: identified.cpf, password }),
+      body: JSON.stringify({ identifier: identified.identifier, password }),
     });
     if (!login.ok) return;
 
@@ -147,17 +148,18 @@ export default function LoginPage() {
           {!identified ? (
             <form className="flex flex-col gap-4" onSubmit={handleCheckCpf}>
               <div>
-                <label htmlFor="cpf" className="field-label">
-                  CPF
+                <label htmlFor="identifier" className="field-label">
+                  CPF ou matrícula
                 </label>
                 <input
-                  id="cpf"
+                  id="identifier"
                   type="text"
-                  placeholder="Digits only"
-                  value={cpf}
-                  maxLength={11}
+                  inputMode="numeric"
+                  placeholder="Somente números"
+                  value={identifierInput}
+                  maxLength={14}
                   onChange={(event) =>
-                    setCpf(event.target.value.replace(/\D/g, ""))
+                    setIdentifierInput(event.target.value)
                   }
                   className="field-input"
                   required

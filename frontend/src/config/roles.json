@@ -1,7 +1,0 @@
-[
-  { "id": 1, "name": "Administrator" },
-  { "id": 2, "name": "Manager" },
-  { "id": 3, "name": "Coordinator" },
-  { "id": 4, "name": "Analyst" },
-  { "id": 5, "name": "Field Technician" }
-]

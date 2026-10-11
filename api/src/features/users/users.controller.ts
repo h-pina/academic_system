@@ -8,9 +8,8 @@ import {
   Param,
   Post,
   Put,
-  UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Auth, AuthWithoutProfile } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,13 +20,13 @@ import { UpdateOwnProfileDto } from './dto/update-own-profile.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @Auth('admin')
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth('admin', 'secretary')
   @Get(':cpf/exists')
   async exists(@Param('cpf') cpf: string) {
     return { exists: await this.usersService.exists(cpf) };
@@ -38,26 +37,26 @@ export class UsersController {
     return { email: await this.usersService.getEmail(cpf) };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth('admin')
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @AuthWithoutProfile()
   @Put('me')
   updateOwnProfile(@CurrentUser() cpf: string, @Body() dto: UpdateOwnProfileDto) {
     return this.usersService.updateOwnProfile(cpf, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth('admin')
   @Put(':cpf')
   updateDetails(@Param('cpf') cpf: string, @Body() dto: UpdateUserDto) {
     return this.usersService.updateDetails(cpf, dto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Auth('admin')
   @Delete(':cpf')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('cpf') cpf: string) {

@@ -34,7 +34,7 @@ describe('Academic System API (e2e)', () => {
 
     const login = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ cpf: ADMIN_CPF, password: PASSWORD });
+      .send({ identifier: ADMIN_CPF, password: PASSWORD });
     token = login.body.accessToken;
   });
 
@@ -50,24 +50,55 @@ describe('Academic System API (e2e)', () => {
       expect(token.length).toBeGreaterThan(0);
     });
 
+    it('logs in with a formatted CPF', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ identifier: '123.456.789-09', password: PASSWORD })
+        .expect(201);
+    });
+
+    it('logs in with the registration number (matrícula)', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ identifier: '2026000001', password: PASSWORD })
+        .expect(201);
+
+      const me = await request(app.getHttpServer())
+        .get('/auth/me')
+        .set({ Authorization: `Bearer ${res.body.accessToken}` })
+        .expect(200);
+      expect(me.body).toMatchObject({
+        name: 'Erin Student',
+        registrationNumber: '2026000001',
+        roles: ['student'],
+      });
+    });
+
+    it('rejects an unknown registration number with 401', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ identifier: '2026999999', password: PASSWORD })
+        .expect(401);
+    });
+
     it('rejects a wrong password with 401', async () => {
       await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ cpf: ADMIN_CPF, password: 'wrong-password' })
+        .send({ identifier: ADMIN_CPF, password: 'wrong-password' })
         .expect(401);
     });
 
     it('rejects an unknown CPF with 401', async () => {
       await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ cpf: UNREGISTERED_CPF, password: PASSWORD })
+        .send({ identifier: UNREGISTERED_CPF, password: PASSWORD })
         .expect(401);
     });
 
     it('rejects an invalid CPF payload with 400', async () => {
       await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ cpf: '123', password: PASSWORD })
+        .send({ identifier: '123', password: PASSWORD })
         .expect(400);
     });
 
@@ -80,7 +111,8 @@ describe('Academic System API (e2e)', () => {
       expect(res.body).toEqual({
         cpf: ADMIN_CPF,
         name: 'Alice Admin',
-        roleId: 1,
+        registrationNumber: null,
+        roles: ['admin'],
       });
     });
 
@@ -99,7 +131,7 @@ describe('Academic System API (e2e)', () => {
     it('does not allow login for a user without password', async () => {
       await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ cpf: '45678912364', password: PASSWORD })
+        .send({ identifier: '45678912364', password: PASSWORD })
         .expect(401);
     });
   });
@@ -115,7 +147,7 @@ describe('Academic System API (e2e)', () => {
         .set(auth())
         .expect(200);
 
-      expect(res.body).toHaveLength(4);
+      expect(res.body).toHaveLength(5);
       for (const user of res.body) {
         expect(user).not.toHaveProperty('passwordHash');
       }
@@ -129,14 +161,13 @@ describe('Academic System API (e2e)', () => {
           cpf: NEW_USER_CPF,
           name: 'Test Person',
           email: 'test.person@example.com',
-          roleId: 3,
           password: 'secret-pass-1',
         })
         .expect(201);
 
       const login = await request(app.getHttpServer())
         .post('/auth/login')
-        .send({ cpf: NEW_USER_CPF, password: 'secret-pass-1' })
+        .send({ identifier: NEW_USER_CPF, password: 'secret-pass-1' })
         .expect(201);
 
       expect(typeof login.body.accessToken).toBe('string');
@@ -150,7 +181,6 @@ describe('Academic System API (e2e)', () => {
           cpf: ADMIN_CPF,
           name: 'Duplicate Person',
           email: 'duplicate@example.com',
-          roleId: 3,
         })
         .expect(409);
     });
@@ -159,7 +189,7 @@ describe('Academic System API (e2e)', () => {
       await request(app.getHttpServer())
         .post('/users')
         .set(auth())
-        .send({ cpf: NEW_USER_CPF, name: 'A', email: 'not-an-email', roleId: 0 })
+        .send({ cpf: NEW_USER_CPF, name: 'A', email: 'not-an-email' })
         .expect(400);
     });
 
@@ -167,7 +197,7 @@ describe('Academic System API (e2e)', () => {
       await request(app.getHttpServer())
         .put(`/users/${UNREGISTERED_CPF}`)
         .set(auth())
-        .send({ name: 'Nobody Here', email: 'nobody@example.com', roleId: 3 })
+        .send({ name: 'Nobody Here', email: 'nobody@example.com' })
         .expect(404);
     });
   });

@@ -8,7 +8,7 @@ import UserFormModal, {
 } from "@/components/users/UserFormModal";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
-import { resolveRoleName } from "@/lib/access";
+import { ROLE_LABELS } from "@/lib/access";
 import { formatCpf } from "@/lib/format";
 import type { User } from "@/types";
 
@@ -16,7 +16,6 @@ const EMPTY_USER: UserDraft = {
   cpf: "",
   name: "",
   email: "",
-  roleId: 0,
   password: "",
 };
 
@@ -59,7 +58,6 @@ export default function RegisterUsersPage() {
           body: JSON.stringify({
             name: draft.name,
             email: draft.email,
-            roleId: draft.roleId,
           }),
         })
       : await request(`/users`, {
@@ -68,7 +66,6 @@ export default function RegisterUsersPage() {
             cpf: draft.cpf,
             name: draft.name,
             email: draft.email,
-            roleId: draft.roleId,
             ...(draft.password ? { password: draft.password } : {}),
           }),
         });
@@ -113,7 +110,7 @@ export default function RegisterUsersPage() {
                 <th>CPF</th>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Role</th>
+                <th>Perfis</th>
                 <th className="w-32 text-center">Actions</th>
               </tr>
             </thead>
@@ -126,9 +123,21 @@ export default function RegisterUsersPage() {
                   <td className="font-medium text-slate-900">{user.name}</td>
                   <td>{user.email}</td>
                   <td>
-                    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                      {resolveRoleName(user.roleId)}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles.length === 0 && (
+                        <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                          Sem vínculo
+                        </span>
+                      )}
+                      {user.roles.map((role) => (
+                        <span
+                          key={role}
+                          className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600"
+                        >
+                          {ROLE_LABELS[role]}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td>
                     <div className="flex items-center justify-center gap-1">

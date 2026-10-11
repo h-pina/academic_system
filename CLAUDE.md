@@ -17,7 +17,7 @@ cp api/.env.example api/.env              # set JWT_SECRET
 cp frontend/.env.example frontend/.env.local
 npm run dev                               # api + frontend together
 
-npm test                                  # API e2e tests (Vitest + supertest, in-memory SQLite)
+npm test                                  # API e2e (Vitest + supertest, in-memory SQLite) and frontend unit tests
 npm run typecheck                         # both workspaces
 npm run build --workspace api
 npm run seed:force --workspace api        # recreate seed data
@@ -32,8 +32,8 @@ npm run seed:force --workspace api        # recreate seed data
 ## Key decisions
 
 - Everyone is a row in `users`. Profiles are extensions of it (`staff`, `teachers`, `students`, keyed by `userId`); roles are derived from which tables contain the user. A user may have several profiles or none.
-- Login with CPF (11 digits) or matrícula (10 digits: year + 6-digit sequence).
+- Login with CPF (11 digits) or matrícula (10 digits: year + 6-digit sequence): `POST /auth/login {identifier, password}`.
 - Data model: see `docs/data-model.md`. Constraints (CHECKs, FKs, uniqueness) are enforced in the database and covered by `api/test/data-model.e2e-spec.ts`.
-- `users.role_id` is transitional; task 02 replaces it with derived roles and removes it.
+- Roles (`admin`, `secretary`, `teacher`, `student`) are derived on every request from the profile tables (`RolesService`); guard routes with `@Auth(...roles)` / `@AuthWithoutProfile()`. `admin` includes `secretary`. A user without profile can sign in but gets 403 elsewhere.
 - Schema is created by TypeORM `synchronize` outside production; there are no migrations yet.
 - Positions and requisitions were removed in task 01.

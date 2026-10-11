@@ -29,18 +29,18 @@ Substituir os perfis atuais (Administrador, Gerente, Analista) por perfis acadê
 
 ## Checklist
 
-- [ ] Criar enum/constantes de perfis compartilhadas (`api/src/common/`) e espelhar no frontend (`frontend/src/types`)
-- [ ] Criar `resolveRoles(userId)` que monta a lista de perfis a partir de `staff`, `teachers` e `students`
-- [ ] Login aceitar CPF ou matrícula e retornar token com `roles: string[]`
-- [ ] Incluir `roles` no payload do JWT e na resposta de `/auth/me`
-- [ ] Criar decorator `@Roles(...)` e `RolesGuard` (passa se o usuário tiver **algum** dos perfis exigidos; `admin` herda `secretary`)
-- [ ] Criar decorator/flag para liberar rotas a usuário sem perfil (`/auth/me`, troca de senha)
-- [ ] Aplicar `@Roles` nos controllers existentes (users) e deixar o padrão pronto para os novos
-- [ ] Decidir a validade do token: recalcular perfis a cada requisição ou aceitar até expirar (documentar a escolha)
-- [ ] Atualizar o seed: um usuário por perfil, um com dois perfis e um sem vínculo
-- [ ] No frontend, criar helper `hasRole`/`canAccess` (aceita lista) e esconder itens de menu sem permissão (navegação final na tarefa 11)
-- [ ] Criar a tela "cadastro sem vínculo" para usuário com `roles` vazio
-- [ ] Redirecionar usuário sem permissão ao tentar acessar rota protegida
+- [x] Criar enum/constantes de perfis compartilhadas (`api/src/common/domain/roles.ts`) e espelhar no frontend (`RoleName` em `frontend/src/types`)
+- [x] Criar `RolesService.resolveRoles(userId)` que monta a lista de perfis a partir de `staff`, `teachers` e `students`. **Decisão:** staff e professor só concedem o perfil com `status = 'active'`; aluno concede `student` exceto com `status = 'dropped'`
+- [x] Login aceitar CPF ou matrícula (`POST /auth/login {identifier, password}`; `GET /auth/access/:identifier`; `PUT /auth/password/reset {identifier, newPassword}`)
+- [x] `roles` na resposta de `/auth/me` e na listagem de usuários. **Decisão:** o JWT leva só `sub` (= `users.id`); os perfis são recalculados a cada requisição
+- [x] Criar decorators `@Auth(...roles)` / `@AuthWithoutProfile()` e `RolesGuard` (passa se o usuário tiver **algum** dos perfis exigidos; `admin` herda `secretary`)
+- [x] Liberar rotas a usuário sem perfil (`GET /auth/me`, `PUT /users/me`) com `@AuthWithoutProfile()`
+- [x] Aplicar `@Auth` nos controllers existentes (users: `admin`; `exists`: `admin` e `secretary`) e deixar o padrão pronto para os novos
+- [x] Perfis recalculados a cada requisição (`JwtStrategy.validate`), então desativar usuário ou perfil tem efeito imediato; usuário com `active = false` recebe 401
+- [x] Atualizar o seed: um usuário por perfil e um sem vínculo (o usuário com dois perfis fica para a tarefa 08; o teste e2e cria um na hora). Remover `users.roleId` (entidade, DTOs, seed, repositório)
+- [x] No frontend, helpers `hasAnyRole`/`canAccessRoute`/`buildMenu` (aceitam lista de perfis) em `lib/access.ts`, com testes
+- [x] Tela "cadastro sem vínculo" (`NoProfileNotice`) para usuário com `roles` vazio; o layout também atualiza os perfis via `/auth/me` a cada carga
+- [x] Redirecionar usuário sem permissão ao tentar acessar rota protegida (layout de `/app`)
 
 ## Critérios de aceite
 
@@ -49,3 +49,9 @@ Substituir os perfis atuais (Administrador, Gerente, Analista) por perfis acadê
 - Usuário com dois perfis tem a união das permissões.
 - Usuário sem vínculo consegue logar, vê a tela explicativa e recebe 403 nas demais rotas.
 - Testes de guard cobrindo os quatro perfis, o acúmulo de perfis e o usuário sem perfil.
+
+## Decisões tomadas na implementação
+
+- `GET /users/:cpf/email` continua público (já era assim e o `ProfileModal` o usa sem token). Exposição de e-mail por CPF é um ponto de atenção para endurecer depois.
+- `PUT /auth/password/reset` continua público e sem exigir senha atual (comportamento original do sistema). Qualquer pessoa que conheça um CPF ou matrícula pode redefinir a senha; vale substituir por um fluxo com verificação (e-mail/token) antes de produção.
+- `POST /users` agora cria o usuário **sem perfil** (somente `admin`). Os perfis nascem nas APIs de alunos, professores e funcionários (tarefas 04, 04b e 05).

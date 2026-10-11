@@ -1,3 +1,8 @@
 [
-  { "code": 1, "label": "Register Users", "route": "register-users" }
+  {
+    "code": 1,
+    "label": "Cadastro de usuários",
+    "route": "register-users",
+    "roles": ["admin"]
+  }
 ]

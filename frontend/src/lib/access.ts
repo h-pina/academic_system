@@ -1,27 +1,49 @@
 import featuresJson from "@/config/features.json";
-import featureAccessJson from "@/config/feature-access.json";
-import rolesJson from "@/config/roles.json";
-import type { Feature, FeatureAccess, MenuItem, Role } from "@/types";
+import type { Feature, MenuItem, RoleName } from "@/types";
 
 const FEATURES = featuresJson as Feature[];
-const FEATURE_ACCESS = featureAccessJson as FeatureAccess[];
-export const ROLES = rolesJson as Role[];
 
-export function resolveRoleName(roleId: number): string {
-  return ROLES.find((role) => role.id === roleId)?.name ?? "Undefined role";
+export const ROLE_LABELS: Record<RoleName, string> = {
+  admin: "Administrador",
+  secretary: "Secretaria",
+  teacher: "Professor",
+  student: "Aluno",
+};
+
+/** `admin` includes every permission of `secretary`. */
+export function expandRoles(roles: readonly RoleName[]): RoleName[] {
+  const expanded = new Set<RoleName>(roles);
+  if (expanded.has("admin")) expanded.add("secretary");
+  return [...expanded];
 }
 
-export function buildMenu(roleId: number): MenuItem[] {
-  const access = FEATURE_ACCESS.find((entry) => entry.roleId === roleId);
-  if (!access) return [];
+export function hasAnyRole(
+  userRoles: readonly RoleName[],
+  required: readonly RoleName[],
+): boolean {
+  const granted = expandRoles(userRoles);
+  return required.some((role) => granted.includes(role));
+}
 
-  const allowed = new Set(access.features);
+/** Human-readable roles, e.g. "Professor, Aluno"; empty when unlinked. */
+export function resolveRoleLabel(roles: readonly RoleName[]): string {
+  return roles.map((role) => ROLE_LABELS[role] ?? role).join(", ");
+}
 
-  return FEATURES.filter((feature) => allowed.has(feature.code)).map(
+export function buildMenu(roles: readonly RoleName[]): MenuItem[] {
+  return FEATURES.filter((feature) => hasAnyRole(roles, feature.roles)).map(
     (feature) => ({ route: feature.route, label: feature.label }),
   );
 }
 
+export function canAccessRoute(
+  roles: readonly RoleName[],
+  route: string,
+): boolean {
+  const feature = FEATURES.find((entry) => entry.route === route);
+  return feature ? hasAnyRole(roles, feature.roles) : false;
+}
+
 export function resolvePageTitle(route: string): string {
-  return FEATURES.find((feature) => feature.route === route)?.label ?? "Module";
+  return FEATURES.find((feature) => feature.route === route)?.label ?? "Módulo";
 }

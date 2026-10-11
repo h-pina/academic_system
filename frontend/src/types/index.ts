@@ -1,8 +1,13 @@
+export type RoleName = "admin" | "secretary" | "teacher" | "student";
+
 export interface User {
+  id: number;
   cpf: string;
   name: string;
   email: string;
-  roleId: number;
+  registrationNumber: string | null;
+  active: boolean;
+  roles: RoleName[];
 }
 
 export interface LoginResponse {
@@ -12,7 +17,8 @@ export interface LoginResponse {
 export interface AuthProfile {
   cpf: string;
   name: string;
-  roleId: number;
+  registrationNumber: string | null;
+  roles: RoleName[];
 }
 
 export interface AccessInfo {
@@ -20,20 +26,11 @@ export interface AccessInfo {
   name: string;
 }
 
-export interface Role {
-  id: number;
-  name: string;
-}
-
 export interface Feature {
   code: number;
   label: string;
   route: string;
-}
-
-export interface FeatureAccess {
-  roleId: number;
-  features: number[];
+  roles: RoleName[];
 }
 
 export interface MenuItem {

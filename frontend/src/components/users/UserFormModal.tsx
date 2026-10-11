@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import { useMessage } from "@/context/MessageContext";
-import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
 import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
 import { formatCpf } from "@/lib/format";
@@ -13,7 +12,6 @@ export interface UserDraft {
   cpf: string;
   name: string;
   email: string;
-  roleId: number;
   password?: string;
 }
 
@@ -32,7 +30,6 @@ export default function UserFormModal({
   onClose,
   onSave,
 }: UserFormModalProps) {
-  const { roles } = useUser();
   const { showMessage } = useMessage();
   const { request } = useApi();
 
@@ -40,7 +37,6 @@ export default function UserFormModal({
     cpf: user.cpf,
     name: user.name,
     email: user.email,
-    roleId: user.roleId,
     password: "",
   });
 
@@ -49,7 +45,6 @@ export default function UserFormModal({
       cpf: user.cpf,
       name: user.name,
       email: user.email,
-      roleId: user.roleId,
       password: "",
     });
   }, [user]);
@@ -86,10 +81,6 @@ export default function UserFormModal({
       });
       return;
     }
-    if (!draft.roleId) {
-      showMessage({ type: "WARNING", messages: ["Please select a role."] });
-      return;
-    }
     if (!editing && draft.password && draft.password.length < 8) {
       showMessage({
         type: "WARNING",
@@ -102,7 +93,6 @@ export default function UserFormModal({
       cpf: cleanCpf,
       name: draft.name.trim(),
       email: draft.email.trim(),
-      roleId: draft.roleId,
       password: draft.password ? draft.password : undefined,
     });
   };
@@ -155,32 +145,6 @@ export default function UserFormModal({
               }
             />
           </label>
-
-          <div>
-            <label htmlFor="role-select" className="field-label">
-              Role *
-            </label>
-            <select
-              id="role-select"
-              className="field-input"
-              value={draft.roleId}
-              onChange={(event) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  roleId: Number(event.target.value),
-                }))
-              }
-            >
-              <option value={0} disabled>
-                -- Select a role --
-              </option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-          </div>
 
           {!editing && (
             <label className="block">

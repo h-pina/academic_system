@@ -21,7 +21,6 @@ erDiagram
         string registration_number UK "YYYY + 6 digits, optional"
         string name
         string email UK
-        int role_id "transitional, removed in task 02"
         string password_hash "null until first access"
         bool active
     }
@@ -91,7 +90,10 @@ matching table, so roles are **derived**, never stored:
 | `student` | a row in `students` |
 
 A user can have several profiles or none (see "users without link" in the
-task). `users.role_id` is transitional and goes away with task 02.
+task). Roles are resolved on every request (never stored in the token), so
+deactivating a user or a profile takes effect immediately. A staff or teacher
+profile grants its role only while `status = 'active'`; a student grants
+`student` unless the status is `dropped`.
 
 ## Registration number (matrícula)
 

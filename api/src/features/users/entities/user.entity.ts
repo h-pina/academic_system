@@ -40,13 +40,6 @@ export class User {
   @Column({ type: 'varchar', length: 160, unique: true })
   email: string;
 
-  /**
-   * Transitional: replaced by roles derived from staff/teachers/students
-   * in task 02, which removes this column.
-   */
-  @Column({ name: 'role_id', type: 'integer' })
-  roleId: number;
-
   @Column({ name: 'password_hash', type: 'varchar', length: 60, nullable: true })
   passwordHash: string | null;
 
