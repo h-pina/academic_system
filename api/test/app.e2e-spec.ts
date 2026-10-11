@@ -147,7 +147,7 @@ describe('Academic System API (e2e)', () => {
         .set(auth())
         .expect(200);
 
-      expect(res.body).toHaveLength(5);
+      expect(res.body).toHaveLength(13);
       for (const user of res.body) {
         expect(user).not.toHaveProperty('passwordHash');
       }

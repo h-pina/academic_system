@@ -309,11 +309,13 @@ describe('Students API (e2e)', () => {
         .expect(200);
       expect(byCpf.body.total).toBe(1);
 
-      const none = await request(server())
+      const graduated = await request(server())
         .get('/students?status=graduated')
         .set(admin)
         .expect(200);
-      expect(none.body.total).toBe(0);
+      expect(graduated.body.items.map((i: { name: string }) => i.name)).toEqual([
+        'Liam Graduated',
+      ]);
 
       const otherCourse = await request(server())
         .get('/students?courseId=999999')

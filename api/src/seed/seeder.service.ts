@@ -10,10 +10,16 @@ import { Teacher } from '../features/teachers/entities/teacher.entity';
 import { Student } from '../features/students/entities/student.entity';
 import { Department } from '../features/departments/entities/department.entity';
 import { Course } from '../features/courses/entities/course.entity';
+import { CurriculumItem } from '../features/courses/entities/curriculum-item.entity';
+import { Subject } from '../features/subjects/entities/subject.entity';
+import { SubjectPrerequisite } from '../features/subjects/entities/subject-prerequisite.entity';
 import { sanitizeCpf } from '../common/utils/cpf.util';
 import {
   SEED_COURSES,
+  SEED_CURRICULUM,
   SEED_DEPARTMENTS,
+  SEED_PREREQUISITES,
+  SEED_SUBJECTS,
   SEED_USERS,
   SeedProfile,
 } from './seed-data';
@@ -38,6 +44,12 @@ export class SeederService implements OnApplicationBootstrap {
     private readonly departments: Repository<Department>,
     @InjectRepository(Course)
     private readonly courses: Repository<Course>,
+    @InjectRepository(CurriculumItem)
+    private readonly curriculum: Repository<CurriculumItem>,
+    @InjectRepository(Subject)
+    private readonly subjects: Repository<Subject>,
+    @InjectRepository(SubjectPrerequisite)
+    private readonly prerequisites: Repository<SubjectPrerequisite>,
     private readonly config: ConfigService,
   ) {
     this.saltRounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 12);
@@ -89,7 +101,47 @@ export class SeederService implements OnApplicationBootstrap {
         totalSemesters: seed.totalSemesters,
       });
     }
-    this.logger.log('seeded departments and courses');
+    await this.seedSubjects();
+    this.logger.log('seeded departments, courses, subjects and curriculum');
+  }
+
+  private async seedSubjects(): Promise<void> {
+    for (const seed of SEED_SUBJECTS) {
+      if (!(await this.subjects.existsBy({ code: seed.code }))) {
+        await this.subjects.insert({
+          code: seed.code,
+          name: seed.name,
+          workloadHours: seed.workloadHours,
+          description: seed.description ?? null,
+        });
+      }
+    }
+
+    const subjectId = async (code: string): Promise<number> =>
+      (await this.subjects.findOneByOrFail({ code })).id;
+
+    for (const seed of SEED_PREREQUISITES) {
+      const id = await subjectId(seed.subjectCode);
+      for (const requiredCode of seed.requires) {
+        const prerequisiteId = await subjectId(requiredCode);
+        if (!(await this.prerequisites.existsBy({ subjectId: id, prerequisiteId }))) {
+          await this.prerequisites.insert({ subjectId: id, prerequisiteId });
+        }
+      }
+    }
+
+    for (const seed of SEED_CURRICULUM) {
+      const course = await this.courses.findOneByOrFail({ code: seed.courseCode });
+      const id = await subjectId(seed.subjectCode);
+      if (!(await this.curriculum.existsBy({ courseId: course.id, subjectId: id }))) {
+        await this.curriculum.insert({
+          courseId: course.id,
+          subjectId: id,
+          semester: seed.semester,
+          mandatory: seed.mandatory ?? true,
+        });
+      }
+    }
   }
 
   private async seedUsers(force: boolean): Promise<void> {

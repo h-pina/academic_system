@@ -26,13 +26,20 @@ Popular o banco vazio com dados acadêmicos de exemplo, para desenvolvimento e d
 
 ## Checklist
 
-- [ ] Reescrever `seed-data.ts` com os dados acima, respeitando a ordem de FKs
-- [ ] Manter o seed idempotente (só popula banco vazio; `--force` recria)
-- [ ] Atualizar a tabela de contas no `README.md`
-- [ ] Conferir login de cada perfil na interface
+- [x] Reescrever `seed-data.ts` com os dados acima, respeitando a ordem de FKs
+- [x] Manter o seed idempotente (só popula banco vazio; `--force` recria)
+- [x] Atualizar a tabela de contas no `README.md`
+- [x] Conferir o login de cada conta semeada (verificado por teste e2e na API, por CPF e por matrícula; a verificação manual na interface web fica para a tarefa 11)
 
 ## Critérios de aceite
 
 - Banco novo + `npm run dev` resulta em dados navegáveis em todas as telas.
 - `npm run seed:force` recria tudo sem erro.
 - README lista as contas de exemplo corretas.
+
+## Decisões tomadas na implementação
+
+- Dados: 2 departamentos (DCC, DMAT), 2 cursos (CC, MAT), 12 disciplinas, 7 vínculos de pré-requisito (8 relações) e a matriz dos dois cursos; 13 usuários (2 funcionários, 4 professores, 6 alunos, 1 com dois perfis, 2 sem vínculo).
+- Alunos com situações distintas: ativos, `locked` (Karl) e `graduated` (Liam), para exercitar filtros.
+- O seed reserva o contador da matrícula (`registration_sequences`) acima dos números semeados, então o próximo aluno recebe o sequencial seguinte.
+- O seed continua idempotente (só popula tabelas vazias; `--force` completa/atualiza). Os testes de outras tarefas foram ajustados aos novos números do seed.

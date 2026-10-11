@@ -85,7 +85,8 @@ describe('Departments and courses API (e2e)', () => {
       for (const token of [admin, secretary, teacher, student]) {
         const res = await request(server()).get('/departments').set(token).expect(200);
         const dcc = res.body.find((d: { code: string }) => d.code === 'DCC');
-        expect(dcc).toMatchObject({ courseCount: 1, teacherCount: 1 });
+        // Courses: CC. Teachers: Carol, Grace and Heidi.
+        expect(dcc).toMatchObject({ courseCount: 1, teacherCount: 3 });
       }
     });
 
@@ -267,7 +268,8 @@ describe('Departments and courses API (e2e)', () => {
         .set(admin)
         .expect(200);
       const cc = res.body.items.find((c: { code: string }) => c.code === 'CC');
-      expect(cc.studentCount).toBe(1);
+      // Erin, Ivan and Karl are Computer Science students.
+      expect(cc.studentCount).toBe(3);
     });
 
     it('updates a course and can inactivate it', async () => {

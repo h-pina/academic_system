@@ -75,18 +75,18 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
         .post('/subjects')
         .set(secretary)
         .send({
-          code: 'mat101',
-          name: ' Calculus I ',
+          code: 'phy101',
+          name: ' Physics I ',
           workloadHours: 90,
-          description: 'Limits and derivatives',
+          description: 'Mechanics and thermodynamics',
         })
         .expect(201);
 
       expect(res.body).toMatchObject({
-        code: 'MAT101',
-        name: 'Calculus I',
+        code: 'PHY101',
+        name: 'Physics I',
         workloadHours: 90,
-        description: 'Limits and derivatives',
+        description: 'Mechanics and thermodynamics',
         prerequisites: [],
         courseCount: 0,
       });
@@ -180,16 +180,33 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
 
   describe('curriculum', () => {
     it('places subjects and returns them grouped by semester', async () => {
+      // A fresh course keeps the seeded curriculum out of the assertions.
+      const department = await ds.getRepository(Course).findOneByOrFail({ code: 'CC' });
+      const fresh = await request(server())
+        .post('/courses')
+        .set(secretary)
+        .send({
+          name: 'Empty Course',
+          code: `EMPTY${++seq}`,
+          departmentId: department.departmentId,
+          totalSemesters: 6,
+        })
+        .expect(201);
       const calculus = await newSubject({ code: 'cur-calc', workloadHours: 90 });
       const algebra = await newSubject({ code: 'cur-alg', workloadHours: 60 });
       const physics = await newSubject({ code: 'cur-phy', workloadHours: 30 });
       await setPrerequisites(physics.id, [calculus.id]).expect(200);
 
-      await addToCurriculum(physics.id, 3).expect(201);
-      await addToCurriculum(calculus.id, 1).expect(201);
-      const res = await addToCurriculum(algebra.id, 1, { mandatory: false }).expect(201);
+      await addToCurriculum(physics.id, 3, {}, fresh.body.id).expect(201);
+      await addToCurriculum(calculus.id, 1, {}, fresh.body.id).expect(201);
+      const res = await addToCurriculum(
+        algebra.id,
+        1,
+        { mandatory: false },
+        fresh.body.id,
+      ).expect(201);
 
-      expect(res.body.courseId).toBe(courseId);
+      expect(res.body.courseId).toBe(fresh.body.id);
       const semesters = res.body.semesters as {
         semester: number;
         workloadHours: number;

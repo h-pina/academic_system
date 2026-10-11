@@ -44,9 +44,7 @@ describe('Teachers API (e2e)', () => {
       .findOneByOrFail({ code: 'DCC' });
     departmentId = department.id;
     otherDepartmentId = (
-      await ds
-        .getRepository(Department)
-        .save({ name: 'Mathematics', code: 'DMAT' })
+      await ds.getRepository(Department).findOneByOrFail({ code: 'DMAT' })
     ).id;
     admin = await loginAs(app, SEEDED.admin);
     secretary = await loginAs(app, SEEDED.secretary);
@@ -189,8 +187,10 @@ describe('Teachers API (e2e)', () => {
         .get(`/teachers?departmentId=${otherDepartmentId}`)
         .set(admin)
         .expect(200);
+      // Seeded: Frank Teacher teaches in Mathematics.
       expect(byDepartment.body.items.map((i: { name: string }) => i.name)).toEqual([
         'Ada Mathematician',
+        'Frank Teacher',
       ]);
 
       const bySearch = await request(server())
