@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pencil, Plus, Trash2, UserX } from "lucide-react";
 import PageHeading from "@/components/PageHeading";
 import StaffFormModal, {
@@ -17,36 +17,40 @@ import { SearchFilter } from "@/components/ui/Filters";
 import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useListState } from "@/hooks/useListState";
 import { usePagedList } from "@/hooks/usePagedList";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { formatCpf } from "@/lib/format";
 import { PROFILE_STATUS_LABELS, STAFF_ROLE_LABELS, statusTone } from "@/lib/labels";
 import type { StaffView } from "@/types";
 
 const PAGE_SIZE = 20;
+const SORT_FIELDS = ["name", "role", "status"] as const;
 
 export default function StaffPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
 
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search);
+  const list = useListState({ q: "" }, SORT_FIELDS);
+  const { filters, page, sort } = list;
 
   const [form, setForm] = useState<{ staff: StaffView | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<StaffView | null>(null);
 
   const { items, total, loading, reload } = usePagedList<StaffView>(
     "/staff",
-    { q: debouncedSearch },
+    list.requestParams,
     page,
     PAGE_SIZE,
+    list.ready,
   );
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
+  const openForm = (staff: StaffView | null) => {
+    setFormErrors({});
+    setForm({ staff });
+  };
 
   const handleSave = async (payload: StaffSavePayload) => {
     const editing = form?.staff ?? null;
@@ -54,19 +58,27 @@ export default function StaffPage() {
     const result = editing
       ? await request(`/staff/${editing.userId}`, {
           method: "PATCH",
+          fieldErrors: true,
           body: JSON.stringify({ role: payload.role, status: payload.status }),
         })
-      : await request("/staff", { method: "POST", body: JSON.stringify(payload) });
+      : await request("/staff", {
+          method: "POST",
+          fieldErrors: true,
+          body: JSON.stringify(payload),
+        });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Funcionário atualizado." : "Funcionário cadastrado."],
-      });
-      setForm(null);
-      reload();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Funcionário atualizado." : "Funcionário cadastrado."],
+    });
+    setForm(null);
+    reload();
   };
 
   const handleRemove = async () => {
@@ -84,6 +96,7 @@ export default function StaffPage() {
   const columns: Column<StaffView>[] = [
     {
       key: "member",
+      sortKey: "name",
       header: "Funcionário",
       cell: (row) => (
         <span className="flex items-center gap-3">
@@ -102,9 +115,10 @@ export default function StaffPage() {
       ),
     },
     { key: "email", header: "E-mail", cell: (row) => row.email },
-    { key: "role", header: "Papel", cell: (row) => STAFF_ROLE_LABELS[row.role] },
+    { key: "role", sortKey: "role", header: "Papel", cell: (row) => STAFF_ROLE_LABELS[row.role] },
     {
       key: "status",
+      sortKey: "status",
       header: "Situação",
       cell: (row) => (
         <StatusBadge label={PROFILE_STATUS_LABELS[row.status]} tone={statusTone(row.status)} />
@@ -117,7 +131,7 @@ export default function StaffPage() {
       className: "w-28",
       cell: (row) => (
         <span className="flex items-center justify-center gap-1">
-          <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ staff: row })}>
+          <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
             <Pencil className="h-4 w-4" />
           </IconButton>
           <IconButton
@@ -138,14 +152,18 @@ export default function StaffPage() {
         title="Funcionários"
         description="Administradores e secretaria com acesso ao sistema."
         actions={
-          <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ staff: null })}>
+          <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
             Novo funcionário
           </Button>
         }
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchFilter placeholder="Nome ou CPF" value={search} onChange={setSearch} />
+        <SearchFilter
+          placeholder="Nome ou CPF"
+          value={filters.q}
+          onChange={(value) => list.setFilter("q", value)}
+        />
       </div>
 
       <Card className="overflow-hidden">
@@ -155,25 +173,28 @@ export default function StaffPage() {
           rows={items}
           loading={loading}
           getRowKey={(row) => row.userId}
+          sort={sort}
+          onSortChange={list.setSort}
           empty={
             <EmptyState
               icon={<UserX className="h-5 w-5" />}
               title="Nenhum funcionário encontrado"
               description={
-                debouncedSearch
+                filters.q
                   ? "Nenhum funcionário corresponde à busca."
                   : "Cadastre o primeiro funcionário para começar."
               }
             />
           }
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={list.setPage} />
       </Card>
 
       {form && (
         <StaffFormModal
           staff={form.staff}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

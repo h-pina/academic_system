@@ -6,6 +6,16 @@ import {
   ProfileStatus,
   TeacherTitle,
 } from '../../common/domain/domain.constants';
+import { ResolvedSort, SortOrder, resolveSort } from '../../common/dto/sort';
+
+const SORT_COLUMNS: Record<string, string> = {
+  name: 'user.name',
+  department: 'department.name',
+  title: 'teacher.title',
+  status: 'teacher.status',
+};
+
+const DEFAULT_SORT: ResolvedSort = { column: 'user.name', direction: 'ASC' };
 
 export interface TeacherView {
   userId: number;
@@ -23,6 +33,8 @@ export interface TeacherFilters {
   departmentId?: number;
   status?: ProfileStatus;
   q?: string;
+  sort?: string;
+  order?: SortOrder;
   page: number;
   pageSize: number;
 }
@@ -56,8 +68,13 @@ export class TeachersRepository {
       );
     }
 
+    const sort = resolveSort(filters.sort, filters.order, SORT_COLUMNS, DEFAULT_SORT);
+    query.orderBy(sort.column, sort.direction);
+    if (sort.column !== 'user.name') {
+      query.addOrderBy('user.name', 'ASC');
+    }
+
     const [rows, total] = await query
-      .orderBy('user.name', 'ASC')
       .skip((filters.page - 1) * filters.pageSize)
       .take(filters.pageSize)
       .getManyAndCount();

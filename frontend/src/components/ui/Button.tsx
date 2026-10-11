@@ -92,7 +92,8 @@ export function IconButton({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        // 36px with a mouse, 44px on touch screens (WCAG 2.5.5 target size).
+        "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11",
         VARIANTS[variant],
         className,
       )}

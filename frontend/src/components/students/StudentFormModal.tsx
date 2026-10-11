@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { Field } from "@/components/ui/Field";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input, Select } from "@/components/ui/Input";
-import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
+import { useFormErrors } from "@/hooks/useFormErrors";
 import { sanitizeCpf } from "@/lib/cpf";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { formatCpf } from "@/lib/format";
 import { STUDENT_STATUS_LABELS, toOptions } from "@/lib/labels";
-import { validateStudentDraft } from "@/lib/validation";
+import { studentFieldErrors } from "@/lib/validation";
 import type { CourseView, StudentStatus, StudentView } from "@/types";
 
 export interface StudentSavePayload {
@@ -26,6 +27,8 @@ interface StudentFormModalProps {
   student: StudentView | null;
   courses: CourseView[];
   loading: boolean;
+  /** Validation errors returned by the API, keyed by field. */
+  errors?: FieldErrors;
   onClose: () => void;
   onSave: (payload: StudentSavePayload) => void;
 }
@@ -34,12 +37,13 @@ export default function StudentFormModal({
   student,
   courses,
   loading,
+  errors: serverErrors,
   onClose,
   onSave,
 }: StudentFormModalProps) {
   const editing = student !== null;
-  const { showMessage } = useMessage();
   const { request } = useApi();
+  const form = useFormErrors(serverErrors);
 
   const [cpf, setCpf] = useState(student?.cpf ?? "");
   const [name, setName] = useState(student?.name ?? "");
@@ -66,15 +70,15 @@ export default function StudentFormModal({
   };
 
   const handleSubmit = () => {
-    const errors = editing
-      ? validateStudentDraft(
+    const found = editing
+      ? studentFieldErrors(
           { cpf: student.cpf, name: student.name, email: student.email, courseId, entryYear },
           { existingUser: true },
         )
-      : validateStudentDraft({ cpf, name, email, courseId, entryYear }, { existingUser });
+      : studentFieldErrors({ cpf, name, email, courseId, entryYear }, { existingUser });
 
-    if (errors.length > 0) {
-      showMessage({ type: "WARNING", messages: errors });
+    if (Object.keys(found).length > 0) {
+      form.setErrors(found as FieldErrors);
       return;
     }
 
@@ -95,6 +99,7 @@ export default function StudentFormModal({
       title={editing ? "Editar aluno" : "Novo aluno"}
       submitLabel={editing ? "Salvar alterações" : "Cadastrar"}
       loading={loading}
+      errors={form.errors}
       onSubmit={handleSubmit}
       onClose={onClose}
     >
@@ -110,6 +115,7 @@ export default function StudentFormModal({
           <Field
             label="CPF"
             required
+            error={form.errors.cpf}
             hint={
               existingUser
                 ? "Esta pessoa já está cadastrada: nome e e-mail serão mantidos."
@@ -122,43 +128,55 @@ export default function StudentFormModal({
                 inputMode="numeric"
                 maxLength={14}
                 value={formatCpf(cpf)}
-                onChange={(event) => setCpf(event.target.value.replace(/\D/g, ""))}
+                onChange={(event) => {
+                  setCpf(event.target.value.replace(/\D/g, ""));
+                  form.clear("cpf");
+                }}
                 onBlur={checkExistingPerson}
               />
             )}
           </Field>
 
-          <Field label="Nome" required>
+          <Field label="Nome" required error={form.errors.name}>
             {(control) => (
               <Input
                 {...control}
                 value={name}
                 disabled={existingUser}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  form.clear("name");
+                }}
               />
             )}
           </Field>
 
-          <Field label="E-mail" required>
+          <Field label="E-mail" required error={form.errors.email}>
             {(control) => (
               <Input
                 {...control}
                 type="email"
                 value={email}
                 disabled={existingUser}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  form.clear("email");
+                }}
               />
             )}
           </Field>
         </>
       )}
 
-      <Field label="Curso" required>
+      <Field label="Curso" required error={form.errors.courseId}>
         {(control) => (
           <Select
             {...control}
             value={courseId}
-            onChange={(event) => setCourseId(Number(event.target.value))}
+            onChange={(event) => {
+              setCourseId(Number(event.target.value));
+              form.clear("courseId");
+            }}
           >
             <option value={0} disabled>
               Selecione o curso
@@ -175,6 +193,7 @@ export default function StudentFormModal({
       <Field
         label="Ano de ingresso"
         required
+        error={form.errors.entryYear}
         hint={
           editing ? undefined : "A matrícula é gerada automaticamente a partir do ano de ingresso."
         }
@@ -184,9 +203,10 @@ export default function StudentFormModal({
             {...control}
             type="number"
             value={entryYear}
-            onChange={(event) =>
-              setEntryYear(event.target.value === "" ? "" : Number(event.target.value))
-            }
+            onChange={(event) => {
+              setEntryYear(event.target.value === "" ? "" : Number(event.target.value));
+              form.clear("entryYear");
+            }}
           />
         )}
       </Field>

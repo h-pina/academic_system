@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { useState } from "react";
+import { NO_SORT, type SortState } from "@/lib/sort";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,6 +11,7 @@ import {
   DataTable,
   EmptyState,
   Field,
+  FormModal,
   IconButton,
   Input,
   Modal,
@@ -377,5 +379,126 @@ describe("Toast", () => {
   it("announces success politely", () => {
     render(<Toast type="SUCCESS" messages={["Aluno cadastrado."]} onDismiss={() => {}} />);
     expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+  });
+});
+
+describe("DataTable sorting", () => {
+  const SORTABLE: Column<Person>[] = [
+    { key: "name", header: "Nome", sortKey: "name", cell: (row) => row.name },
+    { key: "course", header: "Curso", sortKey: "course", cell: (row) => row.course },
+    { key: "plain", header: "Outro", cell: () => "-" },
+  ];
+
+  function SortHarness({ onChange }: { onChange?: (sort: SortState) => void }) {
+    const [sort, setSort] = useState<SortState>(NO_SORT);
+    return (
+      <DataTable
+        caption="Alunos"
+        columns={SORTABLE}
+        rows={PEOPLE}
+        getRowKey={(row) => row.id}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          onChange?.(next);
+        }}
+      />
+    );
+  }
+
+  it("makes only the declared columns sortable, announcing the state", () => {
+    render(<SortHarness />);
+
+    expect(screen.getByRole("columnheader", { name: "Nome" })).toHaveAttribute("aria-sort", "none");
+    expect(screen.getByRole("button", { name: "Nome" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Outro" })).not.toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Outro" })).not.toHaveAttribute("aria-sort");
+  });
+
+  it("cycles ascending, descending and back to the default", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<SortHarness onChange={onChange} />);
+    const header = () => screen.getByRole("columnheader", { name: "Nome" });
+
+    await user.click(screen.getByRole("button", { name: "Nome" }));
+    expect(onChange).toHaveBeenLastCalledWith({ field: "name", order: "asc" });
+    expect(header()).toHaveAttribute("aria-sort", "ascending");
+
+    await user.click(screen.getByRole("button", { name: "Nome" }));
+    expect(onChange).toHaveBeenLastCalledWith({ field: "name", order: "desc" });
+    expect(header()).toHaveAttribute("aria-sort", "descending");
+
+    await user.click(screen.getByRole("button", { name: "Nome" }));
+    expect(onChange).toHaveBeenLastCalledWith(NO_SORT);
+    expect(header()).toHaveAttribute("aria-sort", "none");
+  });
+
+  it("switches to another column starting ascending", async () => {
+    const user = userEvent.setup();
+    render(<SortHarness />);
+
+    await user.click(screen.getByRole("button", { name: "Nome" }));
+    await user.click(screen.getByRole("button", { name: "Curso" }));
+
+    expect(screen.getByRole("columnheader", { name: "Curso" })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    expect(screen.getByRole("columnheader", { name: "Nome" })).toHaveAttribute("aria-sort", "none");
+  });
+});
+
+describe("FormModal", () => {
+  function FormHarness({ errors }: { errors: Record<string, string> }) {
+    return (
+      <FormModal title="Novo aluno" submitLabel="Cadastrar" errors={errors} onSubmit={() => {}} onClose={() => {}}>
+        <Field label="Nome" error={errors.name}>
+          {(control) => <Input {...control} />}
+        </Field>
+        <Field label="E-mail" error={errors.email}>
+          {(control) => <Input {...control} />}
+        </Field>
+      </FormModal>
+    );
+  }
+
+  it("moves focus to the first invalid field when errors appear", async () => {
+    const { rerender } = render(<FormHarness errors={{}} />);
+    await screen.findByRole("dialog", { name: "Novo aluno" });
+
+    rerender(<FormHarness errors={{ email: "Informe um e-mail válido." }} />);
+
+    await waitFor(() => expect(screen.getByLabelText("E-mail")).toHaveFocus());
+    expect(screen.getByLabelText("E-mail")).toHaveAccessibleDescription("Informe um e-mail válido.");
+  });
+
+  it("submits with Enter through the footer button", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <FormModal title="Novo" submitLabel="Cadastrar" onSubmit={onSubmit} onClose={() => {}}>
+        <Field label="Nome">{(control) => <Input {...control} />}</Field>
+      </FormModal>,
+    );
+
+    await user.type(await screen.findByLabelText("Nome"), "Ana{Enter}");
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: "Cadastrar" }));
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+  });
+
+  it("closes with Cancelar", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(
+      <FormModal title="Novo" submitLabel="Cadastrar" onSubmit={() => {}} onClose={onClose}>
+        <p>conteúdo</p>
+      </FormModal>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Cancelar" }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

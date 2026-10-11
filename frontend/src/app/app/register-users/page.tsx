@@ -15,6 +15,7 @@ import { SearchFilter } from "@/components/ui/Filters";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { ROLE_LABELS } from "@/lib/access";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { formatCpf } from "@/lib/format";
 import type { User } from "@/types";
 
@@ -27,6 +28,7 @@ export default function RegisterUsersPage() {
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<{ user: User | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [toDelete, setToDelete] = useState<User | null>(null);
 
   const load = useCallback(async () => {
@@ -59,10 +61,12 @@ export default function RegisterUsersPage() {
     const result = editing
       ? await request(`/users/${editing.cpf}`, {
           method: "PUT",
+          fieldErrors: true,
           body: JSON.stringify({ name: draft.name, email: draft.email }),
         })
       : await request("/users", {
           method: "POST",
+          fieldErrors: true,
           body: JSON.stringify({
             cpf: draft.cpf,
             name: draft.name,
@@ -72,14 +76,22 @@ export default function RegisterUsersPage() {
         });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Usuário atualizado." : "Usuário cadastrado."],
-      });
-      setForm(null);
-      load();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Usuário atualizado." : "Usuário cadastrado."],
+    });
+    setForm(null);
+    load();
+  };
+
+  const openForm = (user: User | null) => {
+    setFormErrors({});
+    setForm({ user });
   };
 
   const handleDelete = async () => {
@@ -147,7 +159,7 @@ export default function RegisterUsersPage() {
       className: "w-28",
       cell: (row) => (
         <span className="flex items-center justify-center gap-1">
-          <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ user: row })}>
+          <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
             <Pencil className="h-4 w-4" />
           </IconButton>
           <IconButton
@@ -168,7 +180,7 @@ export default function RegisterUsersPage() {
         title="Usuários"
         description="Pessoas com acesso ao sistema, inclusive as que ainda não têm vínculo."
         actions={
-          <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ user: null })}>
+          <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
             Novo usuário
           </Button>
         }
@@ -210,6 +222,7 @@ export default function RegisterUsersPage() {
         <UserFormModal
           user={form.user}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

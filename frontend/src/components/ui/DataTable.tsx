@@ -1,8 +1,10 @@
 "use client";
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ariaSort, nextSort, type SortState } from "@/lib/sort";
 
 export interface Column<Row> {
   /** Stable key for the column. */
@@ -12,6 +14,8 @@ export interface Column<Row> {
   align?: "left" | "center" | "right";
   /** Extra classes for the header and cells (width, hiding on mobile...). */
   className?: string;
+  /** Makes the header a sort control; the value is sent to `onSortChange`. */
+  sortKey?: string;
 }
 
 interface DataTableProps<Row> {
@@ -27,6 +31,9 @@ interface DataTableProps<Row> {
   empty?: ReactNode;
   /** Makes each row an actionable item (mouse, Enter and Space). */
   onRowClick?: (row: Row) => void;
+  /** Current sort, for columns that declare a `sortKey`. */
+  sort?: SortState;
+  onSortChange?: (sort: SortState) => void;
 }
 
 const ALIGN = { left: "text-left", center: "text-center", right: "text-right" };
@@ -44,6 +51,8 @@ export function DataTable<Row>({
   skeletonRows = 5,
   empty,
   onRowClick,
+  sort,
+  onSortChange,
 }: DataTableProps<Row>) {
   const showSkeleton = loading && rows.length === 0;
   const showEmpty = !loading && rows.length === 0;
@@ -71,13 +80,35 @@ export function DataTable<Row>({
               <th
                 key={column.key}
                 scope="col"
+                aria-sort={
+                  column.sortKey && sort ? ariaSort(sort, column.sortKey) : undefined
+                }
                 className={cn(
                   "sticky top-0 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500",
                   ALIGN[column.align ?? "left"],
                   column.className,
                 )}
               >
-                {column.header}
+                {column.sortKey && sort && onSortChange ? (
+                  <button
+                    type="button"
+                    onClick={() => onSortChange(nextSort(sort, column.sortKey as string))}
+                    className="inline-flex items-center gap-1 rounded uppercase tracking-wide hover:text-slate-900"
+                  >
+                    {column.header}
+                    {sort.field === column.sortKey ? (
+                      sort.order === "asc" ? (
+                        <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
+                      ) : (
+                        <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3.5 w-3.5 opacity-40" aria-hidden="true" />
+                    )}
+                  </button>
+                ) : (
+                  column.header
+                )}
               </th>
             ))}
           </tr>

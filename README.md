@@ -103,6 +103,10 @@ route.
 
 List endpoints are paginated (`page`, `pageSize` up to 100) and answer
 `{ items, total, page, pageSize }`, except departments, which return an array.
+Students, teachers, staff, courses and subjects also accept `sort` (a column
+from a fixed list per endpoint) and `order` (`asc` or `desc`); anything else is
+a 400. Validation failures answer 400 with `message` (a list of Portuguese
+messages) and `errors` (`[{ field, message }]`) so a form can mark each field.
 Rules enforced by the API are listed in the task files under `tasks/` and
 covered by the e2e tests in `api/test/`.
 

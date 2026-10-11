@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pencil, Plus, Trash2, UserX } from "lucide-react";
 import PageHeading from "@/components/PageHeading";
 import StudentFormModal, {
@@ -18,43 +18,43 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { useAllItems } from "@/hooks/useAllItems";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useListState } from "@/hooks/useListState";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatCpf } from "@/lib/format";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { STUDENT_STATUS_LABELS, statusTone, toOptions } from "@/lib/labels";
 import type { CourseView, StudentView } from "@/types";
 
 const PAGE_SIZE = 20;
+const SORT_FIELDS = ["name", "registrationNumber", "course", "entryYear", "status"] as const;
 
 export default function StudentsPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
   const { isAdmin, canManage } = usePermissions();
 
-  const [search, setSearch] = useState("");
-  const [courseId, setCourseId] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search);
+  const list = useListState({ q: "", courseId: "", status: "" }, SORT_FIELDS);
+  const { filters, page, sort } = list;
 
   const [form, setForm] = useState<{ student: StudentView | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<StudentView | null>(null);
 
   const courses = useAllItems<CourseView>("/courses");
   const { items, total, loading, reload } = usePagedList<StudentView>(
     "/students",
-    { q: debouncedSearch, courseId, status },
+    list.requestParams,
     page,
     PAGE_SIZE,
+    list.ready,
   );
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, courseId, status]);
-
-  const filtered = Boolean(debouncedSearch || courseId || status);
+  const openForm = (student: StudentView | null) => {
+    setFormErrors({});
+    setForm({ student });
+  };
 
   const handleSave = async (payload: StudentSavePayload) => {
     const editing = form?.student ?? null;
@@ -62,23 +62,31 @@ export default function StudentsPage() {
     const result = editing
       ? await request(`/students/${editing.userId}`, {
           method: "PATCH",
+          fieldErrors: true,
           body: JSON.stringify({
             courseId: payload.courseId,
             entryYear: payload.entryYear,
             status: payload.status,
           }),
         })
-      : await request("/students", { method: "POST", body: JSON.stringify(payload) });
+      : await request("/students", {
+          method: "POST",
+          fieldErrors: true,
+          body: JSON.stringify(payload),
+        });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Aluno atualizado." : "Aluno cadastrado."],
-      });
-      setForm(null);
-      reload();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Aluno atualizado." : "Aluno cadastrado."],
+    });
+    setForm(null);
+    reload();
   };
 
   const handleRemove = async () => {
@@ -96,6 +104,7 @@ export default function StudentsPage() {
   const columns: Column<StudentView>[] = [
     {
       key: "student",
+      sortKey: "name",
       header: "Aluno",
       cell: (row) => (
         <span className="flex items-center gap-3">
@@ -106,6 +115,7 @@ export default function StudentsPage() {
     },
     {
       key: "registration",
+      sortKey: "registrationNumber",
       header: "Matrícula",
       cell: (row) => (
         <span className="font-mono text-xs tabular-nums text-slate-600">
@@ -122,10 +132,11 @@ export default function StudentsPage() {
         </span>
       ),
     },
-    { key: "course", header: "Curso", cell: (row) => row.courseName },
-    { key: "entry", header: "Ingresso", cell: (row) => row.entryYear },
+    { key: "course", sortKey: "course", header: "Curso", cell: (row) => row.courseName },
+    { key: "entry", sortKey: "entryYear", header: "Ingresso", cell: (row) => row.entryYear },
     {
       key: "status",
+      sortKey: "status",
       header: "Situação",
       cell: (row) => (
         <StatusBadge label={STUDENT_STATUS_LABELS[row.status]} tone={statusTone(row.status)} />
@@ -140,7 +151,7 @@ export default function StudentsPage() {
             className: "w-28",
             cell: (row: StudentView) => (
               <span className="flex items-center justify-center gap-1">
-                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ student: row })}>
+                <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
                   <Pencil className="h-4 w-4" />
                 </IconButton>
                 {isAdmin && (
@@ -166,7 +177,7 @@ export default function StudentsPage() {
         description="Consulte alunos e acompanhe curso, matrícula e situação acadêmica."
         actions={
           canManage && (
-            <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ student: null })}>
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
               Novo aluno
             </Button>
           )
@@ -174,17 +185,21 @@ export default function StudentsPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchFilter placeholder="Nome, matrícula ou CPF" value={search} onChange={setSearch} />
+        <SearchFilter
+          placeholder="Nome, matrícula ou CPF"
+          value={filters.q}
+          onChange={(value) => list.setFilter("q", value)}
+        />
         <SelectFilter
           label="Curso"
-          value={courseId}
-          onChange={setCourseId}
+          value={filters.courseId}
+          onChange={(value) => list.setFilter("courseId", value)}
           options={courses.items.map((course) => ({ value: course.id, label: course.name }))}
         />
         <SelectFilter
           label="Situação"
-          value={status}
-          onChange={setStatus}
+          value={filters.status}
+          onChange={(value) => list.setFilter("status", value)}
           allLabel="Todas"
           options={toOptions(STUDENT_STATUS_LABELS)}
         />
@@ -197,12 +212,14 @@ export default function StudentsPage() {
           rows={items}
           loading={loading}
           getRowKey={(row) => row.userId}
+          sort={sort}
+          onSortChange={list.setSort}
           empty={
             <EmptyState
               icon={<UserX className="h-5 w-5" />}
               title="Nenhum aluno encontrado"
               description={
-                filtered
+                list.isFiltered
                   ? "Nenhum aluno corresponde aos filtros. Limpe a busca ou escolha outra situação."
                   : canManage
                     ? "Cadastre o primeiro aluno para começar."
@@ -211,7 +228,7 @@ export default function StudentsPage() {
             />
           }
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={list.setPage} />
       </Card>
 
       {form && (
@@ -221,6 +238,7 @@ export default function StudentsPage() {
             (course) => course.status === "active" || course.id === form.student?.courseId,
           )}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

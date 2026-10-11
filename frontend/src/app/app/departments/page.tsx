@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import type { Department } from "@/types";
 
 export default function DepartmentsPage() {
@@ -22,6 +23,7 @@ export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<{ department: Department | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<Department | null>(null);
 
@@ -41,18 +43,27 @@ export default function DepartmentsPage() {
     setSaving(true);
     const result = await request(editing ? `/departments/${editing.id}` : "/departments", {
       method: editing ? "PATCH" : "POST",
+      fieldErrors: true,
       body: JSON.stringify(payload),
     });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Departamento atualizado." : "Departamento cadastrado."],
-      });
-      setForm(null);
-      load();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Departamento atualizado." : "Departamento cadastrado."],
+    });
+    setForm(null);
+    load();
+  };
+
+  const openForm = (department: Department | null) => {
+    setFormErrors({});
+    setForm({ department });
   };
 
   const handleRemove = async () => {
@@ -89,7 +100,7 @@ export default function DepartmentsPage() {
             className: "w-28",
             cell: (row: Department) => (
               <span className="flex items-center justify-center gap-1">
-                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ department: row })}>
+                <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
                   <Pencil className="h-4 w-4" />
                 </IconButton>
                 {isAdmin && (
@@ -117,7 +128,7 @@ export default function DepartmentsPage() {
           canManage && (
             <Button
               icon={<Plus className="h-4 w-4" />}
-              onClick={() => setForm({ department: null })}
+              onClick={() => openForm(null)}
             >
               Novo departamento
             </Button>
@@ -150,6 +161,7 @@ export default function DepartmentsPage() {
         <DepartmentFormModal
           department={form.department}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

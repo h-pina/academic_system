@@ -23,6 +23,8 @@ export function usePagedList<T>(
   filters: Filters,
   page: number,
   pageSize: number,
+  /** Hold the request until the screen knows its filters (e.g. from the URL). */
+  enabled = true,
 ): PagedListResult<T> {
   const { request } = useApi();
   const [items, setItems] = useState<T[]>([]);
@@ -34,6 +36,7 @@ export function usePagedList<T>(
   const query = buildQuery({ ...filters, page, pageSize });
 
   useEffect(() => {
+    if (!enabled) return;
     const ticket = ++latest.current;
     setLoading(true);
 
@@ -45,7 +48,7 @@ export function usePagedList<T>(
       setTotal(result.ok ? result.data.total : 0);
       setLoading(false);
     })();
-  }, [request, path, query, version]);
+  }, [request, path, query, version, enabled]);
 
   const reload = useCallback(() => setVersion((current) => current + 1), []);
 

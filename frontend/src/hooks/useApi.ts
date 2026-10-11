@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
 import { useUser } from "@/context/UserContext";
+import { hasFieldErrors, toFieldErrors, type FieldErrors } from "@/lib/fieldErrors";
 import { storage } from "@/lib/storage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -12,11 +13,16 @@ const TIMEOUT_MS = 60_000;
 export interface RequestOptions extends RequestInit {
   auth?: boolean;
   silent?: boolean;
+  /**
+   * Hand validation errors back keyed by field instead of raising a toast,
+   * for forms that mark each field. Other failures still raise a toast.
+   */
+  fieldErrors?: boolean;
 }
 
 export type ApiResult<T> =
   | { ok: true; data: T }
-  | { ok: false; data: null; error: string };
+  | { ok: false; data: null; error: string; fieldErrors?: FieldErrors };
 
 export function useApi() {
   const { showMessage } = useMessage();
@@ -25,7 +31,7 @@ export function useApi() {
 
   const request = useCallback(
     async <T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> => {
-      const { auth = true, silent = false, ...init } = options;
+      const { auth = true, silent = false, fieldErrors = false, ...init } = options;
 
       const fail = (error: string): ApiResult<T> => {
         if (!silent) showMessage({ type: "ERROR", messages: [error] });
@@ -82,6 +88,17 @@ export function useApi() {
         }
 
         if (!response.ok) {
+          if (fieldErrors && body && typeof body === "object" && "errors" in body) {
+            const mapped = toFieldErrors((body as { errors: unknown }).errors);
+            if (hasFieldErrors(mapped)) {
+              return {
+                ok: false,
+                data: null,
+                error: extractErrorMessage(body, response.status),
+                fieldErrors: mapped,
+              };
+            }
+          }
           return fail(extractErrorMessage(body, response.status));
         }
 

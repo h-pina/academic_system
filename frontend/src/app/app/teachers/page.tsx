@@ -17,9 +17,10 @@ import { SearchFilter, SelectFilter } from "@/components/ui/Filters";
 import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useListState } from "@/hooks/useListState";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { formatCpf } from "@/lib/format";
 import {
   PROFILE_STATUS_LABELS,
@@ -30,28 +31,28 @@ import {
 import type { Department, TeacherView } from "@/types";
 
 const PAGE_SIZE = 20;
+const SORT_FIELDS = ["name", "department", "title", "status"] as const;
 
 export default function TeachersPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
   const { isAdmin, canManage } = usePermissions();
 
-  const [search, setSearch] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search);
+  const list = useListState({ q: "", departmentId: "", status: "" }, SORT_FIELDS);
+  const { filters, page, sort } = list;
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [form, setForm] = useState<{ teacher: TeacherView | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<TeacherView | null>(null);
 
   const { items, total, loading, reload } = usePagedList<TeacherView>(
     "/teachers",
-    { q: debouncedSearch, departmentId, status },
+    list.requestParams,
     page,
     PAGE_SIZE,
+    list.ready,
   );
 
   useEffect(() => {
@@ -61,11 +62,10 @@ export default function TeachersPage() {
     })();
   }, [request]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, departmentId, status]);
-
-  const filtered = Boolean(debouncedSearch || departmentId || status);
+  const openForm = (teacher: TeacherView | null) => {
+    setFormErrors({});
+    setForm({ teacher });
+  };
 
   const handleSave = async (payload: TeacherSavePayload) => {
     const editing = form?.teacher ?? null;
@@ -73,23 +73,31 @@ export default function TeachersPage() {
     const result = editing
       ? await request(`/teachers/${editing.userId}`, {
           method: "PATCH",
+          fieldErrors: true,
           body: JSON.stringify({
             departmentId: payload.departmentId,
             title: payload.title,
             status: payload.status,
           }),
         })
-      : await request("/teachers", { method: "POST", body: JSON.stringify(payload) });
+      : await request("/teachers", {
+          method: "POST",
+          fieldErrors: true,
+          body: JSON.stringify(payload),
+        });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Professor atualizado." : "Professor cadastrado."],
-      });
-      setForm(null);
-      reload();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Professor atualizado." : "Professor cadastrado."],
+    });
+    setForm(null);
+    reload();
   };
 
   const handleRemove = async () => {
@@ -107,6 +115,7 @@ export default function TeachersPage() {
   const columns: Column<TeacherView>[] = [
     {
       key: "teacher",
+      sortKey: "name",
       header: "Professor",
       cell: (row) => (
         <span className="flex items-center gap-3">
@@ -125,10 +134,21 @@ export default function TeachersPage() {
       ),
     },
     { key: "email", header: "E-mail", cell: (row) => row.email },
-    { key: "department", header: "Departamento", cell: (row) => row.departmentName },
-    { key: "title", header: "Titulação", cell: (row) => TEACHER_TITLE_LABELS[row.title] },
+    {
+      key: "department",
+      sortKey: "department",
+      header: "Departamento",
+      cell: (row) => row.departmentName,
+    },
+    {
+      key: "title",
+      sortKey: "title",
+      header: "Titulação",
+      cell: (row) => TEACHER_TITLE_LABELS[row.title],
+    },
     {
       key: "status",
+      sortKey: "status",
       header: "Situação",
       cell: (row) => (
         <StatusBadge label={PROFILE_STATUS_LABELS[row.status]} tone={statusTone(row.status)} />
@@ -143,7 +163,7 @@ export default function TeachersPage() {
             className: "w-28",
             cell: (row: TeacherView) => (
               <span className="flex items-center justify-center gap-1">
-                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ teacher: row })}>
+                <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
                   <Pencil className="h-4 w-4" />
                 </IconButton>
                 {isAdmin && (
@@ -169,7 +189,7 @@ export default function TeachersPage() {
         description="Consulte professores, departamentos e titulação."
         actions={
           canManage && (
-            <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ teacher: null })}>
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
               Novo professor
             </Button>
           )
@@ -177,11 +197,15 @@ export default function TeachersPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchFilter placeholder="Nome ou CPF" value={search} onChange={setSearch} />
+        <SearchFilter
+          placeholder="Nome ou CPF"
+          value={filters.q}
+          onChange={(value) => list.setFilter("q", value)}
+        />
         <SelectFilter
           label="Departamento"
-          value={departmentId}
-          onChange={setDepartmentId}
+          value={filters.departmentId}
+          onChange={(value) => list.setFilter("departmentId", value)}
           options={departments.map((department) => ({
             value: department.id,
             label: department.name,
@@ -189,8 +213,8 @@ export default function TeachersPage() {
         />
         <SelectFilter
           label="Situação"
-          value={status}
-          onChange={setStatus}
+          value={filters.status}
+          onChange={(value) => list.setFilter("status", value)}
           allLabel="Todas"
           options={toOptions(PROFILE_STATUS_LABELS)}
         />
@@ -203,12 +227,14 @@ export default function TeachersPage() {
           rows={items}
           loading={loading}
           getRowKey={(row) => row.userId}
+          sort={sort}
+          onSortChange={list.setSort}
           empty={
             <EmptyState
               icon={<UserX className="h-5 w-5" />}
               title="Nenhum professor encontrado"
               description={
-                filtered
+                list.isFiltered
                   ? "Nenhum professor corresponde aos filtros. Limpe a busca ou escolha outra situação."
                   : canManage
                     ? "Cadastre o primeiro professor para começar."
@@ -217,7 +243,7 @@ export default function TeachersPage() {
             />
           }
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={list.setPage} />
       </Card>
 
       {form && (
@@ -225,6 +251,7 @@ export default function TeachersPage() {
           teacher={form.teacher}
           departments={departments}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

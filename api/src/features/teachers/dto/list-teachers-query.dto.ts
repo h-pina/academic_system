@@ -5,6 +5,9 @@ import {
   ProfileStatus,
 } from '../../../common/domain/domain.constants';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { SORT_ORDERS, SortOrder } from '../../../common/dto/sort';
+
+export const TEACHER_SORT_FIELDS = ['name', 'department', 'title', 'status'] as const;
 
 export class ListTeachersQueryDto extends PaginationQueryDto {
   @IsOptional()
@@ -20,4 +23,12 @@ export class ListTeachersQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   q?: string;
+
+  @IsOptional()
+  @IsIn(TEACHER_SORT_FIELDS)
+  sort?: (typeof TEACHER_SORT_FIELDS)[number];
+
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  order?: SortOrder;
 }

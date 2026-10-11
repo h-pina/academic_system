@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { Field } from "@/components/ui/Field";
 import { FormModal } from "@/components/ui/FormModal";
 import { Checkbox, Input, Textarea } from "@/components/ui/Input";
-import { useMessage } from "@/context/MessageContext";
-import { MAX_WORKLOAD_HOURS, validateSubjectDraft } from "@/lib/validation";
+import { useFormErrors } from "@/hooks/useFormErrors";
+import type { FieldErrors } from "@/lib/fieldErrors";
+import { MAX_WORKLOAD_HOURS, subjectFieldErrors } from "@/lib/validation";
 import type { SubjectView } from "@/types";
 
 export interface SubjectSavePayload {
@@ -21,6 +22,8 @@ interface SubjectFormModalProps {
   /** Every other subject, offered as possible prerequisites. */
   candidates: SubjectView[];
   loading: boolean;
+  /** Validation errors returned by the API, keyed by field. */
+  errors?: FieldErrors;
   onClose: () => void;
   onSave: (payload: SubjectSavePayload) => void;
 }
@@ -29,10 +32,11 @@ export default function SubjectFormModal({
   subject,
   candidates,
   loading,
+  errors: serverErrors,
   onClose,
   onSave,
 }: SubjectFormModalProps) {
-  const { showMessage } = useMessage();
+  const form = useFormErrors(serverErrors);
   const [code, setCode] = useState(subject?.code ?? "");
   const [name, setName] = useState(subject?.name ?? "");
   const [workloadHours, setWorkloadHours] = useState<number | "">(subject?.workloadHours ?? 60);
@@ -63,9 +67,9 @@ export default function SubjectFormModal({
     });
 
   const handleSubmit = () => {
-    const errors = validateSubjectDraft({ code, name, workloadHours, description });
-    if (errors.length > 0) {
-      showMessage({ type: "WARNING", messages: errors });
+    const found = subjectFieldErrors({ code, name, workloadHours, description });
+    if (Object.keys(found).length > 0) {
+      form.setErrors(found as FieldErrors);
       return;
     }
     onSave({
@@ -83,22 +87,26 @@ export default function SubjectFormModal({
       submitLabel={subject ? "Salvar alterações" : "Cadastrar"}
       size="lg"
       loading={loading}
+      errors={form.errors}
       onSubmit={handleSubmit}
       onClose={onClose}
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Código" required>
+        <Field label="Código" required error={form.errors.code}>
           {(control) => (
             <Input
               {...control}
               maxLength={20}
               className="uppercase"
               value={code}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(event) => {
+                setCode(event.target.value);
+                form.clear("code");
+              }}
             />
           )}
         </Field>
-        <Field label="Carga horária (h)" required>
+        <Field label="Carga horária (h)" required error={form.errors.workloadHours}>
           {(control) => (
             <Input
               {...control}
@@ -106,28 +114,39 @@ export default function SubjectFormModal({
               min={1}
               max={MAX_WORKLOAD_HOURS}
               value={workloadHours}
-              onChange={(event) =>
-                setWorkloadHours(event.target.value === "" ? "" : Number(event.target.value))
-              }
+              onChange={(event) => {
+                setWorkloadHours(event.target.value === "" ? "" : Number(event.target.value));
+                form.clear("workloadHours");
+              }}
             />
           )}
         </Field>
       </div>
 
-      <Field label="Nome" required>
+      <Field label="Nome" required error={form.errors.name}>
         {(control) => (
-          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+          <Input
+            {...control}
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              form.clear("name");
+            }}
+          />
         )}
       </Field>
 
-      <Field label="Descrição">
+      <Field label="Descrição" error={form.errors.description}>
         {(control) => (
           <Textarea
             {...control}
             rows={2}
             maxLength={500}
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              form.clear("description");
+            }}
           />
         )}
       </Field>

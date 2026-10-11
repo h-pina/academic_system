@@ -247,7 +247,7 @@
                 }
               ]
             },
-            "description": "JWT (admin, secretary, teacher). Paginated. Filters: `courseId`, `status` (active|locked|graduated|dropped), `q` (name, matrícula or CPF), `page`, `pageSize` (max 100)."
+            "description": "JWT (admin, secretary, teacher). Paginated. Filters: `courseId`, `status` (active|locked|graduated|dropped), `q` (name, matrícula or CPF), `sort`, `order` (asc|desc), `page`, `pageSize` (max 100)."
           }
         },
         {
@@ -368,7 +368,7 @@
                 }
               ]
             },
-            "description": "JWT (admin). Paginated. Filters: `role` (admin|secretary), `status` (active|inactive), `q` (name or CPF), `page`, `pageSize`."
+            "description": "JWT (admin). Paginated. Filters: `role` (admin|secretary), `status` (active|inactive), `q` (name or CPF), `sort`, `order` (asc|desc), `page`, `pageSize`."
           }
         },
         {
@@ -507,7 +507,7 @@
                 }
               ]
             },
-            "description": "JWT (admin, secretary, teacher). Paginated. Filters: `departmentId`, `status` (active|inactive), `q` (name or CPF), `page`, `pageSize`."
+            "description": "JWT (admin, secretary, teacher). Paginated. Filters: `departmentId`, `status` (active|inactive), `q` (name or CPF), `sort`, `order` (asc|desc), `page`, `pageSize`."
           }
         },
         {
@@ -739,7 +739,7 @@
                 }
               ]
             },
-            "description": "JWT (any user with a profile). Paginated. Filters: `departmentId`, `status` (active|inactive), `q` (name or code), `page`, `pageSize`. Includes `studentCount`."
+            "description": "JWT (any user with a profile). Paginated. Filters: `departmentId`, `status` (active|inactive), `q` (name or code), `sort`, `order` (asc|desc), `page`, `pageSize`. Includes `studentCount`."
           }
         },
         {
@@ -860,7 +860,7 @@
                 }
               ]
             },
-            "description": "JWT (any user with a profile). Paginated. Filters: `q` (code or name), `courseId` (only subjects in that curriculum), `page`, `pageSize`. Each subject includes its `prerequisites` and `courseCount`."
+            "description": "JWT (any user with a profile). Paginated. Filters: `q` (code or name), `courseId` (only subjects in that curriculum), `sort`, `order` (asc|desc), `page`, `pageSize`. Each subject includes its `prerequisites` and `courseCount`."
           }
         },
         {

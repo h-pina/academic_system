@@ -15,6 +15,9 @@ import {
   CourseStatus,
 } from '../../../common/domain/domain.constants';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { SORT_ORDERS, SortOrder } from '../../../common/dto/sort';
+
+export const COURSE_SORT_FIELDS = ['name', 'code', 'department', 'totalSemesters', 'status'] as const;
 
 const CODE_PATTERN = /^[A-Za-z0-9_-]{2,20}$/;
 const CODE_MESSAGE = 'code must have 2-20 letters, digits, "-" or "_"';
@@ -85,4 +88,12 @@ export class ListCoursesQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   q?: string;
+
+  @IsOptional()
+  @IsIn(COURSE_SORT_FIELDS)
+  sort?: (typeof COURSE_SORT_FIELDS)[number];
+
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  order?: SortOrder;
 }

@@ -17,6 +17,17 @@ import {
 } from './dto/course.dto';
 import { Paginated } from '../../common/dto/pagination-query.dto';
 import { CourseStatus } from '../../common/domain/domain.constants';
+import { ResolvedSort, resolveSort } from '../../common/dto/sort';
+
+const SORT_COLUMNS: Record<string, string> = {
+  name: 'course.name',
+  code: 'course.code',
+  department: 'department.name',
+  totalSemesters: 'course.totalSemesters',
+  status: 'course.status',
+};
+
+const DEFAULT_SORT: ResolvedSort = { column: 'course.name', direction: 'ASC' };
 
 export interface CourseView {
   id: number;
@@ -62,8 +73,13 @@ export class CoursesService {
       );
     }
 
+    const sort = resolveSort(query.sort, query.order, SORT_COLUMNS, DEFAULT_SORT);
+    builder.orderBy(sort.column, sort.direction);
+    if (sort.column !== 'course.name') {
+      builder.addOrderBy('course.name', 'ASC');
+    }
+
     const [rows, total] = await builder
-      .orderBy('course.name', 'ASC')
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();

@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Field } from "@/components/ui/Field";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/Input";
-import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
-import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
+import { useFormErrors } from "@/hooks/useFormErrors";
+import { sanitizeCpf } from "@/lib/cpf";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { formatCpf } from "@/lib/format";
-import { MIN_NAME_LENGTH, MIN_PASSWORD_LENGTH, isValidEmail } from "@/lib/validation";
+import { userFieldErrors } from "@/lib/validation";
 import type { User } from "@/types";
 
 export interface UserDraft {
@@ -22,6 +23,8 @@ interface UserFormModalProps {
   /** `null` creates a user (without a profile); otherwise the user being edited. */
   user: User | null;
   loading: boolean;
+  /** Validation errors returned by the API, keyed by field. */
+  errors?: FieldErrors;
   onClose: () => void;
   onSave: (draft: UserDraft) => void;
 }
@@ -29,12 +32,13 @@ interface UserFormModalProps {
 export default function UserFormModal({
   user,
   loading,
+  errors: serverErrors,
   onClose,
   onSave,
 }: UserFormModalProps) {
   const editing = user !== null;
-  const { showMessage } = useMessage();
   const { request } = useApi();
+  const form = useFormErrors(serverErrors);
 
   const [cpf, setCpf] = useState(user?.cpf ?? "");
   const [name, setName] = useState(user?.name ?? "");
@@ -53,18 +57,14 @@ export default function UserFormModal({
   };
 
   const handleSubmit = () => {
-    const errors: string[] = [];
-    if (!editing && !isValidCpf(sanitizeCpf(cpf))) errors.push("Informe um CPF válido.");
-    if (name.trim().length < MIN_NAME_LENGTH) {
-      errors.push(`O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`);
-    }
-    if (!isValidEmail(email)) errors.push("Informe um e-mail válido.");
-    if (!editing && password && password.length < MIN_PASSWORD_LENGTH) {
-      errors.push(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
-    }
+    const found = userFieldErrors(
+      { cpf, name, email, password },
+      { creating: !editing },
+    );
+    if (cpfTaken) found.cpf = "Já existe um usuário com este CPF.";
 
-    if (errors.length > 0) {
-      showMessage({ type: "WARNING", messages: errors });
+    if (Object.keys(found).length > 0) {
+      form.setErrors(found as FieldErrors);
       return;
     }
 
@@ -86,13 +86,14 @@ export default function UserFormModal({
       }
       submitLabel={editing ? "Salvar alterações" : "Cadastrar"}
       loading={loading}
+      errors={form.errors}
       onSubmit={handleSubmit}
       onClose={onClose}
     >
       <Field
         label="CPF"
         required={!editing}
-        error={cpfTaken ? "Já existe um usuário com este CPF." : undefined}
+        error={form.errors.cpf ?? (cpfTaken ? "Já existe um usuário com este CPF." : undefined)}
       >
         {(control) => (
           <Input
@@ -104,25 +105,36 @@ export default function UserFormModal({
             onChange={(event) => {
               setCpf(event.target.value.replace(/\D/g, ""));
               setCpfTaken(false);
+              form.clear("cpf");
             }}
             onBlur={checkCpfTaken}
           />
         )}
       </Field>
 
-      <Field label="Nome" required>
+      <Field label="Nome" required error={form.errors.name}>
         {(control) => (
-          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+          <Input
+            {...control}
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              form.clear("name");
+            }}
+          />
         )}
       </Field>
 
-      <Field label="E-mail" required>
+      <Field label="E-mail" required error={form.errors.email}>
         {(control) => (
           <Input
             {...control}
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              form.clear("email");
+            }}
           />
         )}
       </Field>
@@ -130,6 +142,7 @@ export default function UserFormModal({
       {!editing && (
         <Field
           label="Senha"
+          error={form.errors.password}
           hint="Deixe em branco para que a pessoa defina a senha no primeiro acesso."
         >
           {(control) => (
@@ -138,7 +151,10 @@ export default function UserFormModal({
               type="password"
               autoComplete="new-password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                form.clear("password");
+              }}
             />
           )}
         </Field>

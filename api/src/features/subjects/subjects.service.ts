@@ -18,6 +18,15 @@ import {
 import { buildGraph, wouldCreateCycle } from './prerequisite-graph';
 import { TransactionService } from '../../common/database/transaction.service';
 import { Paginated } from '../../common/dto/pagination-query.dto';
+import { ResolvedSort, resolveSort } from '../../common/dto/sort';
+
+const SORT_COLUMNS: Record<string, string> = {
+  code: 'subject.code',
+  name: 'subject.name',
+  workloadHours: 'subject.workloadHours',
+};
+
+const DEFAULT_SORT: ResolvedSort = { column: 'subject.code', direction: 'ASC' };
 
 export interface SubjectSummary {
   id: number;
@@ -62,8 +71,13 @@ export class SubjectsService {
       );
     }
 
+    const sort = resolveSort(query.sort, query.order, SORT_COLUMNS, DEFAULT_SORT);
+    builder.orderBy(sort.column, sort.direction);
+    if (sort.column !== 'subject.code') {
+      builder.addOrderBy('subject.code', 'ASC');
+    }
+
     const [rows, total] = await builder
-      .orderBy('subject.code', 'ASC')
       .skip((query.page - 1) * query.pageSize)
       .take(query.pageSize)
       .getManyAndCount();

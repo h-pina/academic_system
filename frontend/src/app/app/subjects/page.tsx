@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BookOpen, Pencil, Plus, Trash2 } from "lucide-react";
 import PageHeading from "@/components/PageHeading";
 import SubjectFormModal, {
@@ -16,38 +16,42 @@ import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useAllItems } from "@/hooks/useAllItems";
 import { useApi } from "@/hooks/useApi";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useListState } from "@/hooks/useListState";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { prerequisiteFailureMessage } from "@/lib/messages";
 import type { SubjectView } from "@/types";
 
 const PAGE_SIZE = 20;
+const SORT_FIELDS = ["code", "name", "workloadHours"] as const;
 
 export default function SubjectsPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
   const { isAdmin, canManage } = usePermissions();
 
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search);
+  const list = useListState({ q: "" }, SORT_FIELDS);
+  const { filters, page, sort } = list;
 
   const [form, setForm] = useState<{ subject: SubjectView | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<SubjectView | null>(null);
 
   const { items, total, loading, reload } = usePagedList<SubjectView>(
     "/subjects",
-    { q: debouncedSearch },
+    list.requestParams,
     page,
     PAGE_SIZE,
+    list.ready,
   );
   const candidates = useAllItems<SubjectView>("/subjects", {}, form !== null);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
+  const openForm = (subject: SubjectView | null) => {
+    setFormErrors({});
+    setForm({ subject });
+  };
 
   const handleSave = async (payload: SubjectSavePayload) => {
     const editing = form?.subject ?? null;
@@ -58,6 +62,7 @@ export default function SubjectsPage() {
       editing ? `/subjects/${editing.id}` : "/subjects",
       {
         method: editing ? "PATCH" : "POST",
+        fieldErrors: true,
         body: JSON.stringify(
           editing ? fields : { ...fields, description: fields.description || undefined },
         ),
@@ -66,6 +71,7 @@ export default function SubjectsPage() {
 
     if (!saved.ok) {
       setSaving(false);
+      setFormErrors(saved.fieldErrors ?? {});
       return;
     }
 
@@ -117,15 +123,23 @@ export default function SubjectsPage() {
   const columns: Column<SubjectView>[] = [
     {
       key: "code",
+      sortKey: "code",
       header: "Código",
       cell: (row) => <span className="font-mono text-xs text-slate-600">{row.code}</span>,
     },
     {
       key: "name",
+      sortKey: "name",
       header: "Disciplina",
       cell: (row) => <span className="font-medium text-slate-900">{row.name}</span>,
     },
-    { key: "hours", header: "Carga (h)", align: "center", cell: (row) => row.workloadHours },
+    {
+      key: "hours",
+      sortKey: "workloadHours",
+      header: "Carga (h)",
+      align: "center",
+      cell: (row) => row.workloadHours,
+    },
     {
       key: "prerequisites",
       header: "Pré-requisitos",
@@ -148,7 +162,7 @@ export default function SubjectsPage() {
             className: "w-28",
             cell: (row: SubjectView) => (
               <span className="flex items-center justify-center gap-1">
-                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ subject: row })}>
+                <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
                   <Pencil className="h-4 w-4" />
                 </IconButton>
                 {isAdmin && (
@@ -174,7 +188,7 @@ export default function SubjectsPage() {
         description="Catálogo de disciplinas, com carga horária e pré-requisitos."
         actions={
           canManage && (
-            <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ subject: null })}>
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
               Nova disciplina
             </Button>
           )
@@ -182,7 +196,11 @@ export default function SubjectsPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchFilter placeholder="Código ou nome" value={search} onChange={setSearch} />
+        <SearchFilter
+          placeholder="Código ou nome"
+          value={filters.q}
+          onChange={(value) => list.setFilter("q", value)}
+        />
       </div>
 
       <Card className="overflow-hidden">
@@ -192,12 +210,14 @@ export default function SubjectsPage() {
           rows={items}
           loading={loading}
           getRowKey={(row) => row.id}
+          sort={sort}
+          onSortChange={list.setSort}
           empty={
             <EmptyState
               icon={<BookOpen className="h-5 w-5" />}
               title="Nenhuma disciplina encontrada"
               description={
-                debouncedSearch
+                filters.q
                   ? "Nenhuma disciplina corresponde à busca."
                   : canManage
                     ? "Cadastre a primeira disciplina para montar as matrizes."
@@ -206,7 +226,7 @@ export default function SubjectsPage() {
             />
           }
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={list.setPage} />
       </Card>
 
       {form && (
@@ -214,6 +234,7 @@ export default function SubjectsPage() {
           subject={form.subject}
           candidates={candidates.items}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Field } from "@/components/ui/Field";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input, Select } from "@/components/ui/Input";
-import { useMessage } from "@/context/MessageContext";
+import { useFormErrors } from "@/hooks/useFormErrors";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { COURSE_STATUS_LABELS, toOptions } from "@/lib/labels";
-import { MAX_SEMESTERS, validateCourseDraft } from "@/lib/validation";
+import { MAX_SEMESTERS, courseFieldErrors } from "@/lib/validation";
 import type { CourseStatus, CourseView, Department } from "@/types";
 
 export interface CourseSavePayload {
@@ -21,6 +22,8 @@ interface CourseFormModalProps {
   course: CourseView | null;
   departments: Department[];
   loading: boolean;
+  /** Validation errors returned by the API, keyed by field. */
+  errors?: FieldErrors;
   onClose: () => void;
   onSave: (payload: CourseSavePayload) => void;
 }
@@ -29,10 +32,11 @@ export default function CourseFormModal({
   course,
   departments,
   loading,
+  errors: serverErrors,
   onClose,
   onSave,
 }: CourseFormModalProps) {
-  const { showMessage } = useMessage();
+  const form = useFormErrors(serverErrors);
   const [name, setName] = useState(course?.name ?? "");
   const [code, setCode] = useState(course?.code ?? "");
   const [departmentId, setDepartmentId] = useState(course?.departmentId ?? 0);
@@ -42,9 +46,9 @@ export default function CourseFormModal({
   const [status, setStatus] = useState<CourseStatus>(course?.status ?? "active");
 
   const handleSubmit = () => {
-    const errors = validateCourseDraft({ name, code, departmentId, totalSemesters });
-    if (errors.length > 0) {
-      showMessage({ type: "WARNING", messages: errors });
+    const found = courseFieldErrors({ name, code, departmentId, totalSemesters });
+    if (Object.keys(found).length > 0) {
+      form.setErrors(found as FieldErrors);
       return;
     }
     onSave({
@@ -61,33 +65,47 @@ export default function CourseFormModal({
       title={course ? "Editar curso" : "Novo curso"}
       submitLabel={course ? "Salvar alterações" : "Cadastrar"}
       loading={loading}
+      errors={form.errors}
       onSubmit={handleSubmit}
       onClose={onClose}
     >
-      <Field label="Nome" required>
+      <Field label="Nome" required error={form.errors.name}>
         {(control) => (
-          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+          <Input
+            {...control}
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              form.clear("name");
+            }}
+          />
         )}
       </Field>
 
-      <Field label="Código" required>
+      <Field label="Código" required error={form.errors.code}>
         {(control) => (
           <Input
             {...control}
             maxLength={20}
             className="uppercase"
             value={code}
-            onChange={(event) => setCode(event.target.value)}
+            onChange={(event) => {
+              setCode(event.target.value);
+              form.clear("code");
+            }}
           />
         )}
       </Field>
 
-      <Field label="Departamento" required>
+      <Field label="Departamento" required error={form.errors.departmentId}>
         {(control) => (
           <Select
             {...control}
             value={departmentId}
-            onChange={(event) => setDepartmentId(Number(event.target.value))}
+            onChange={(event) => {
+              setDepartmentId(Number(event.target.value));
+              form.clear("departmentId");
+            }}
           >
             <option value={0} disabled>
               Selecione o departamento
@@ -101,7 +119,7 @@ export default function CourseFormModal({
         )}
       </Field>
 
-      <Field label="Número de semestres" required>
+      <Field label="Número de semestres" required error={form.errors.totalSemesters}>
         {(control) => (
           <Input
             {...control}
@@ -109,9 +127,10 @@ export default function CourseFormModal({
             min={1}
             max={MAX_SEMESTERS}
             value={totalSemesters}
-            onChange={(event) =>
-              setTotalSemesters(event.target.value === "" ? "" : Number(event.target.value))
-            }
+            onChange={(event) => {
+              setTotalSemesters(event.target.value === "" ? "" : Number(event.target.value));
+              form.clear("totalSemesters");
+            }}
           />
         )}
       </Field>

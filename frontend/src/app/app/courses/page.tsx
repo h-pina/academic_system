@@ -17,35 +17,36 @@ import { SearchFilter, SelectFilter } from "@/components/ui/Filters";
 import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useListState } from "@/hooks/useListState";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { FieldErrors } from "@/lib/fieldErrors";
 import { COURSE_STATUS_LABELS, statusTone, toOptions } from "@/lib/labels";
 import type { CourseView, Department } from "@/types";
 
 const PAGE_SIZE = 20;
+const SORT_FIELDS = ["name", "code", "department", "totalSemesters", "status"] as const;
 
 export default function CoursesPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
   const { isAdmin, canManage } = usePermissions();
 
-  const [search, setSearch] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search);
+  const list = useListState({ q: "", departmentId: "", status: "" }, SORT_FIELDS);
+  const { filters, page, sort } = list;
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [form, setForm] = useState<{ course: CourseView | null } | null>(null);
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<CourseView | null>(null);
 
   const { items, total, loading, reload } = usePagedList<CourseView>(
     "/courses",
-    { q: debouncedSearch, departmentId, status },
+    list.requestParams,
     page,
     PAGE_SIZE,
+    list.ready,
   );
 
   useEffect(() => {
@@ -55,29 +56,32 @@ export default function CoursesPage() {
     })();
   }, [request]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, departmentId, status]);
-
-  const filtered = Boolean(debouncedSearch || departmentId || status);
+  const openForm = (course: CourseView | null) => {
+    setFormErrors({});
+    setForm({ course });
+  };
 
   const handleSave = async (payload: CourseSavePayload) => {
     const editing = form?.course ?? null;
     setSaving(true);
     const result = await request(editing ? `/courses/${editing.id}` : "/courses", {
       method: editing ? "PATCH" : "POST",
+      fieldErrors: true,
       body: JSON.stringify(payload),
     });
     setSaving(false);
 
-    if (result.ok) {
-      showMessage({
-        type: "SUCCESS",
-        messages: [editing ? "Curso atualizado." : "Curso cadastrado."],
-      });
-      setForm(null);
-      reload();
+    if (!result.ok) {
+      setFormErrors(result.fieldErrors ?? {});
+      return;
     }
+
+    showMessage({
+      type: "SUCCESS",
+      messages: [editing ? "Curso atualizado." : "Curso cadastrado."],
+    });
+    setForm(null);
+    reload();
   };
 
   const handleRemove = async () => {
@@ -95,19 +99,33 @@ export default function CoursesPage() {
   const columns: Column<CourseView>[] = [
     {
       key: "code",
+      sortKey: "code",
       header: "Código",
       cell: (row) => <span className="font-mono text-xs text-slate-600">{row.code}</span>,
     },
     {
       key: "name",
+      sortKey: "name",
       header: "Curso",
       cell: (row) => <span className="font-medium text-slate-900">{row.name}</span>,
     },
-    { key: "department", header: "Departamento", cell: (row) => row.departmentName },
-    { key: "semesters", header: "Semestres", align: "center", cell: (row) => row.totalSemesters },
+    {
+      key: "department",
+      sortKey: "department",
+      header: "Departamento",
+      cell: (row) => row.departmentName,
+    },
+    {
+      key: "semesters",
+      sortKey: "totalSemesters",
+      header: "Semestres",
+      align: "center",
+      cell: (row) => row.totalSemesters,
+    },
     { key: "students", header: "Alunos", align: "center", cell: (row) => row.studentCount },
     {
       key: "status",
+      sortKey: "status",
       header: "Situação",
       cell: (row) => (
         <StatusBadge label={COURSE_STATUS_LABELS[row.status]} tone={statusTone(row.status)} />
@@ -129,7 +147,7 @@ export default function CoursesPage() {
             <ListTree className="h-4 w-4" />
           </Link>
           {canManage && (
-            <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ course: row })}>
+            <IconButton label={`Editar ${row.name}`} onClick={() => openForm(row)}>
               <Pencil className="h-4 w-4" />
             </IconButton>
           )}
@@ -154,7 +172,7 @@ export default function CoursesPage() {
         description="Cursos por departamento e a matriz curricular de cada um."
         actions={
           canManage && (
-            <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ course: null })}>
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => openForm(null)}>
               Novo curso
             </Button>
           )
@@ -162,11 +180,15 @@ export default function CoursesPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <SearchFilter placeholder="Nome ou código" value={search} onChange={setSearch} />
+        <SearchFilter
+          placeholder="Nome ou código"
+          value={filters.q}
+          onChange={(value) => list.setFilter("q", value)}
+        />
         <SelectFilter
           label="Departamento"
-          value={departmentId}
-          onChange={setDepartmentId}
+          value={filters.departmentId}
+          onChange={(value) => list.setFilter("departmentId", value)}
           options={departments.map((department) => ({
             value: department.id,
             label: department.name,
@@ -174,8 +196,8 @@ export default function CoursesPage() {
         />
         <SelectFilter
           label="Situação"
-          value={status}
-          onChange={setStatus}
+          value={filters.status}
+          onChange={(value) => list.setFilter("status", value)}
           allLabel="Todas"
           options={toOptions(COURSE_STATUS_LABELS)}
         />
@@ -188,12 +210,14 @@ export default function CoursesPage() {
           rows={items}
           loading={loading}
           getRowKey={(row) => row.id}
+          sort={sort}
+          onSortChange={list.setSort}
           empty={
             <EmptyState
               icon={<Library className="h-5 w-5" />}
               title="Nenhum curso encontrado"
               description={
-                filtered
+                list.isFiltered
                   ? "Nenhum curso corresponde aos filtros. Limpe a busca ou escolha outra situação."
                   : canManage
                     ? "Cadastre o primeiro curso para montar a matriz curricular."
@@ -202,7 +226,7 @@ export default function CoursesPage() {
             />
           }
         />
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={list.setPage} />
       </Card>
 
       {form && (
@@ -210,6 +234,7 @@ export default function CoursesPage() {
           course={form.course}
           departments={departments}
           loading={saving}
+          errors={formErrors}
           onClose={() => setForm(null)}
           onSave={handleSave}
         />

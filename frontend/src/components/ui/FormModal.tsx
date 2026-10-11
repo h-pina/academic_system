@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
@@ -11,6 +11,12 @@ interface FormModalProps {
   cancelLabel?: string;
   loading?: boolean;
   size?: "sm" | "md" | "lg";
+  /**
+   * Field errors currently shown. Whenever this changes to a non-empty set,
+   * focus moves to the first invalid field so keyboard and screen-reader
+   * users land on the problem.
+   */
+  errors?: Record<string, string | undefined>;
   onSubmit: () => void;
   onClose: () => void;
   children: ReactNode;
@@ -28,11 +34,19 @@ export function FormModal({
   cancelLabel = "Cancelar",
   loading = false,
   size = "md",
+  errors,
   onSubmit,
   onClose,
   children,
 }: FormModalProps) {
   const formId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!errors || Object.values(errors).every((message) => !message)) return;
+    const first = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    first?.focus();
+  }, [errors]);
 
   return (
     <Modal
@@ -56,6 +70,7 @@ export function FormModal({
     >
       <form
         id={formId}
+        ref={formRef}
         noValidate
         onSubmit={(event) => {
           event.preventDefault();

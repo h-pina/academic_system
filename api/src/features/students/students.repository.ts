@@ -3,6 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { StudentStatus } from '../../common/domain/domain.constants';
+import { ResolvedSort, SortOrder, resolveSort } from '../../common/dto/sort';
+
+const SORT_COLUMNS: Record<string, string> = {
+  name: 'user.name',
+  registrationNumber: 'user.registrationNumber',
+  course: 'course.name',
+  entryYear: 'student.entryYear',
+  status: 'student.status',
+};
+
+const DEFAULT_SORT: ResolvedSort = { column: 'user.name', direction: 'ASC' };
 
 export interface StudentView {
   userId: number;
@@ -20,6 +31,8 @@ export interface StudentFilters {
   courseId?: number;
   status?: StudentStatus;
   q?: string;
+  sort?: string;
+  order?: SortOrder;
   page: number;
   pageSize: number;
 }
@@ -53,8 +66,13 @@ export class StudentsRepository {
       );
     }
 
+    const sort = resolveSort(filters.sort, filters.order, SORT_COLUMNS, DEFAULT_SORT);
+    query.orderBy(sort.column, sort.direction);
+    if (sort.column !== 'user.name') {
+      query.addOrderBy('user.name', 'ASC');
+    }
+
     const [rows, total] = await query
-      .orderBy('user.name', 'ASC')
       .skip((filters.page - 1) * filters.pageSize)
       .take(filters.pageSize)
       .getManyAndCount();

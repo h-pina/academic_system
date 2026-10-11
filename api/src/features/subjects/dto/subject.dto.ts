@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -13,6 +14,9 @@ import {
   MinLength,
 } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { SORT_ORDERS, SortOrder } from '../../../common/dto/sort';
+
+export const SUBJECT_SORT_FIELDS = ['code', 'name', 'workloadHours'] as const;
 
 const CODE_PATTERN = /^[A-Za-z0-9_-]{2,20}$/;
 const CODE_MESSAGE = 'code must have 2-20 letters, digits, "-" or "_"';
@@ -76,6 +80,14 @@ export class ListSubjectsQueryDto extends PaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   courseId?: number;
+
+  @IsOptional()
+  @IsIn(SUBJECT_SORT_FIELDS)
+  sort?: (typeof SUBJECT_SORT_FIELDS)[number];
+
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  order?: SortOrder;
 }
 
 export class SetPrerequisitesDto {

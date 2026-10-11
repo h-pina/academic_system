@@ -26,6 +26,8 @@ const FIELD_LABELS: Record<string, string> = {
   page: 'página',
   pageSize: 'tamanho da página',
   q: 'busca',
+  sort: 'ordenação',
+  order: 'sentido da ordenação',
 };
 
 const CONSTRAINT_MESSAGES: Record<string, (field: string) => string> = {
@@ -51,12 +53,22 @@ function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** Flattens class-validator errors into Portuguese messages for the UI. */
-export function translateValidationErrors(
+/** One validation failure: the offending property and a message for the UI. */
+export interface FieldError {
+  /** Dotted path of the property, e.g. `cpf` or `items.0.name`. */
+  field: string;
+  message: string;
+}
+
+/**
+ * Flattens class-validator errors into one entry per failure, with the
+ * property it belongs to, so a form can show each message on its field.
+ */
+export function translateFieldErrors(
   errors: ValidationError[],
   parentPath = '',
-): string[] {
-  const messages: string[] = [];
+): FieldError[] {
+  const result: FieldError[] = [];
 
   for (const error of errors) {
     const path = parentPath ? `${parentPath}.${error.property}` : error.property;
@@ -64,16 +76,22 @@ export function translateValidationErrors(
 
     for (const key of Object.keys(error.constraints ?? {})) {
       if (key === 'whitelistValidation') {
-        messages.push(`O campo "${path}" não é permitido`);
+        result.push({ field: path, message: `O campo "${path}" não é permitido` });
         continue;
       }
-      const build = CONSTRAINT_MESSAGES[key] ?? ((name: string) => `${name} é inválido`);
-      messages.push(capitalize(build(field)));
+      const build =
+        CONSTRAINT_MESSAGES[key] ?? ((name: string) => `${name} é inválido`);
+      result.push({ field: path, message: capitalize(build(field)) });
     }
 
     if (error.children?.length) {
-      messages.push(...translateValidationErrors(error.children, path));
+      result.push(...translateFieldErrors(error.children, path));
     }
   }
-  return messages;
+  return result;
+}
+
+/** The same failures as plain messages (the legacy `message` array). */
+export function translateValidationErrors(errors: ValidationError[]): string[] {
+  return translateFieldErrors(errors).map((entry) => entry.message);
 }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  courseFieldErrors,
+  departmentFieldErrors,
   isValidCode,
+  studentFieldErrors,
+  subjectFieldErrors,
+  teacherFieldErrors,
+  userFieldErrors,
   validateCourseDraft,
   validateDepartmentDraft,
   validateProfileForm,
@@ -221,6 +227,63 @@ describe("validateProfileForm", () => {
         newPassword: "newpassword8",
         confirmPassword: "newpassword8",
       }),
+    ).toEqual({});
+  });
+});
+
+describe("field-level errors", () => {
+  it("key each message by its field, in the order of the form", () => {
+    expect(
+      studentFieldErrors(
+        { cpf: "111", name: "Al", email: "x", courseId: 0, entryYear: "" },
+        { existingUser: false },
+      ),
+    ).toEqual({
+      cpf: "Informe um CPF válido.",
+      name: "O nome deve ter pelo menos 3 caracteres.",
+      email: "Informe um e-mail válido.",
+      courseId: "Selecione o curso.",
+      entryYear: "O ano de ingresso deve estar entre 1900 e 2100.",
+    });
+  });
+
+  it("agree with the list form of the same validation", () => {
+    const draft = { name: "Fi", code: "a b" };
+    expect(validateDepartmentDraft(draft)).toEqual(Object.values(departmentFieldErrors(draft)));
+  });
+
+  it("report department, course and subject problems on their own fields", () => {
+    expect(
+      courseFieldErrors({ name: "Fisica", code: "FIS", departmentId: 0, totalSemesters: 0 }),
+    ).toEqual({
+      departmentId: "Selecione o departamento.",
+      totalSemesters: "O número de semestres deve estar entre 1 e 20.",
+    });
+    expect(
+      subjectFieldErrors({
+        name: "Cálculo I",
+        code: "MAT101",
+        workloadHours: 5000,
+        description: "",
+      }),
+    ).toEqual({ workloadHours: "A carga horária deve estar entre 1 e 1000 horas." });
+    expect(
+      teacherFieldErrors(
+        { cpf: "12345678909", name: "João Souza", email: "j@e.com", departmentId: 1, title: "" },
+        { existingUser: false },
+      ),
+    ).toEqual({ title: "Selecione a titulação." });
+  });
+
+  it("validate the user form, including the optional password", () => {
+    const base = { cpf: "12345678909", name: "Ana Souza", email: "ana@example.com", password: "" };
+    expect(userFieldErrors(base, { creating: true })).toEqual({});
+    expect(userFieldErrors({ ...base, password: "curta" }, { creating: true })).toEqual({
+      password: "A senha deve ter pelo menos 8 caracteres.",
+    });
+    // Editing ignores CPF and password.
+    expect(
+      userFieldErrors({ ...base, cpf: "1", password: "x" }, { creating: false }),
     ).toEqual({});
   });
 });
