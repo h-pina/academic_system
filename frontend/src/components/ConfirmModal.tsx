@@ -36,7 +36,7 @@ export default function ConfirmModal({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            className="rounded-lg border border-slate-300 bg-surface px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
             {cancelLabel}
           </button>

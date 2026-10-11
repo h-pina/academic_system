@@ -10,13 +10,32 @@
   }
 
   body {
-    background-color: theme("colors.canvas");
-    color: #1f2430;
+    background-color: rgb(var(--c-canvas));
+    color: rgb(var(--c-slate-900));
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   /* Consistent, keyboard-friendly focus ring across interactive elements. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui,
+      sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Smooth theme switches, unless the user prefers reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    body,
+    .card,
+    .modal-card,
+    .field-input {
+      transition: background-color 0.2s ease, border-color 0.2s ease,
+        color 0.2s ease;
+    }
+  }
+
   :where(a, button, input, select, textarea):focus-visible {
     outline: none;
     box-shadow: theme("boxShadow.focus");
@@ -28,13 +47,13 @@
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #cdd2dc;
+    background: rgb(var(--c-slate-300));
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #b4bac6;
+    background: rgb(var(--c-slate-400));
     background-clip: content-box;
   }
 }
@@ -46,7 +65,7 @@
   }
 
   .field-input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
+    @apply w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 text-sm text-slate-900
       placeholder:text-slate-400 transition-colors
       focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15
       disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500;

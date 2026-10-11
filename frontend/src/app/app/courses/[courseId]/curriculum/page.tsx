@@ -205,7 +205,7 @@ export default function CurriculumPage() {
                       <div className="flex items-center gap-1">
                         <select
                           aria-label="Mover para o semestre"
-                          className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"
+                          className="rounded-lg border border-slate-300 bg-surface px-2 py-1 text-sm"
                           value={entry.semester}
                           disabled={busy}
                           onChange={(event) =>
@@ -222,7 +222,7 @@ export default function CurriculumPage() {
                           type="button"
                           disabled={busy}
                           onClick={() => toggleMandatory(item)}
-                          className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                          className="rounded-lg border border-slate-300 bg-surface px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
                         >
                           {item.mandatory ? "Tornar optativa" : "Tornar obrigatória"}
                         </button>

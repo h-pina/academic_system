@@ -3,7 +3,7 @@ import type { Tone } from "@/lib/labels";
 const TONE_STYLES: Record<Tone, string> = {
   success: "bg-emerald-50 text-emerald-700",
   warning: "bg-amber-50 text-amber-700",
-  danger: "bg-red-50 text-red-700",
+  danger: "bg-red-50 text-red-800",
   neutral: "bg-slate-100 text-slate-600",
 };
 

@@ -7,7 +7,7 @@ export default function LoadingSpinner({ modal = false }: { modal?: boolean }) {
           : "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       }
     >
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card">
+      <div className="rounded-xl border border-slate-200 bg-surface p-4 shadow-card">
         <svg
           className="h-8 w-8 animate-spin text-brand-600"
           xmlns="http://www.w3.org/2000/svg"

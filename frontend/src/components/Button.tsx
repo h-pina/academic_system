@@ -27,12 +27,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const FULL_STYLES: Record<ButtonVariant, string> = {
   save: "bg-brand-600 hover:bg-brand-700 text-white shadow-card",
-  cancel: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
+  cancel: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
   add: "bg-brand-600 hover:bg-brand-700 text-white shadow-card",
-  edit: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
+  edit: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
   delete: "bg-red-600 hover:bg-red-700 text-white shadow-card",
-  close: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
-  back: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
+  close: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
+  back: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
 };
 
 const ICON_ONLY_STYLES: Record<ButtonVariant, string> = {

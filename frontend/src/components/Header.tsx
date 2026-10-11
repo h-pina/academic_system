@@ -1,6 +1,8 @@
 "use client";
 
-import { GraduationCap, LogOut, UserRound } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useUser } from "@/context/UserContext";
 
 export default function Header() {
@@ -9,41 +11,43 @@ export default function Header() {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-          <GraduationCap className="h-5 w-5" />
-        </span>
+        <BrandMark size={40} />
         <div className="leading-tight">
-          <p className="text-sm font-semibold tracking-tight text-slate-900">
+          <p className="font-display text-sm font-bold tracking-tight text-slate-900">
             Sistema Acadêmico
           </p>
           <p className="text-xs text-slate-500">Gestão acadêmica</p>
         </div>
       </div>
 
-      {profile && (
-        <div className="flex items-center gap-2">
-          <div className="mr-1 hidden text-right leading-tight sm:block">
-            <p className="text-sm font-medium text-slate-900">{profile.name}</p>
-            <p className="text-xs text-slate-500">{roleName}</p>
-          </div>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
 
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
-            title="Editar meus dados"
-            onClick={() => setProfileOpen(!profileOpen)}
-          >
-            <UserRound className="h-5 w-5" />
-          </button>
+        {profile && (
+          <>
+            <div className="mr-1 hidden text-right leading-tight sm:block">
+              <p className="text-sm font-medium text-slate-900">{profile.name}</p>
+              <p className="text-xs text-slate-500">{roleName}</p>
+            </div>
 
-          <button
-            onClick={() => actions.clearUser()}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-            title="Sair"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
-        </div>
-      )}
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
+              title="Editar meus dados"
+              onClick={() => setProfileOpen(!profileOpen)}
+            >
+              <UserRound className="h-5 w-5" />
+            </button>
+
+            <button
+              onClick={() => actions.clearUser()}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-surface text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </>
+        )}
+      </div>
     </header>
   );
 }

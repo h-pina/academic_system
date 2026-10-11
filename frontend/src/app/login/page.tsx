@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, EyeOff, GraduationCap } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useMessage } from "@/context/MessageContext";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
@@ -117,12 +119,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-canvas p-6">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-canvas p-6">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
-            <GraduationCap className="h-6 w-6" />
-          </span>
+          <BrandMark size={52} className="mb-3" />
           <h1 className="text-base font-semibold text-slate-900">
             Sistema Acadêmico
           </h1>

@@ -1,4 +1,31 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
+import {
+  dark,
+  light,
+  radii,
+  tailwindColorEntries,
+  toCssVariables,
+} from "./src/styles/tokens";
+
+/** Emits the theme variables: light by default, dark by OS preference or choice. */
+const themeVariables = plugin(({ addBase }) => {
+  const lightVars = { ...toCssVariables(light), "color-scheme": "light" };
+  const darkVars = { ...toCssVariables(dark), "color-scheme": "dark" };
+
+  addBase({
+    ":root": {
+      ...lightVars,
+      "--radius-control": radii.control,
+      "--radius-surface": radii.surface,
+      "--radius-overlay": radii.overlay,
+    },
+    "@media (prefers-color-scheme: dark)": {
+      ':root:not([data-theme="light"])': darkVars,
+    },
+    ':root[data-theme="dark"]': darkVars,
+  });
+});
 
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
@@ -6,33 +33,27 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        canvas: "#f4f5f7",
-        surface: "#ffffff",
-        brand: {
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          300: "#a5b4fc",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
-        },
+        ...tailwindColorEntries(),
+        // Semantic aliases over the neutral ramp.
+        ink: "rgb(var(--c-slate-900) / <alpha-value>)",
+        muted: "rgb(var(--c-slate-600) / <alpha-value>)",
+        line: "rgb(var(--c-slate-200) / <alpha-value>)",
+      },
+      borderRadius: {
+        lg: "var(--radius-control)",
+        xl: "var(--radius-surface)",
+        "2xl": "var(--radius-overlay)",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.08)",
-        panel: "0 4px 12px rgba(16, 24, 40, 0.08), 0 12px 32px rgba(16, 24, 40, 0.12)",
-        focus: "0 0 0 3px rgba(99, 102, 241, 0.35)",
+        card: "0 1px 2px rgb(var(--shadow) / 0.05), 0 1px 3px rgb(var(--shadow) / 0.09)",
+        panel: "0 4px 12px rgb(var(--shadow) / 0.08), 0 12px 32px rgb(var(--shadow) / 0.14)",
+        focus: "0 0 0 3px rgb(var(--c-brand-500) / 0.4)",
       },
       keyframes: {
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
         "scale-in": {
           from: { opacity: "0", transform: "translateY(8px) scale(0.98)" },
           to: { opacity: "1", transform: "translateY(0) scale(1)" },
@@ -49,7 +70,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [themeVariables],
 };
 
 export default config;
