@@ -33,4 +33,4 @@
 ## Verification before finishing
 
 - Run in the affected workspace before calling work done: `npm run typecheck`, `npm run build` and `npm test` (and `npm run lint` once ESLint is configured).
-- Report failures with their output; do not mark a task done, ask for approval or commit while they fail.
+- Report failures with their output; do not mark a task done, merge while they fail.
