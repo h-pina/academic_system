@@ -19,8 +19,6 @@ interface UserContextValue {
   /** The sections of the user's navigation, designed for their profiles. */
   navigation: NavSection[];
   hydrated: boolean;
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
   actions: {
     setUser: (profile: AuthProfile) => void;
     clearUser: () => void;
@@ -32,7 +30,6 @@ const UserContext = createContext<UserContextValue | null>(null);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [hydrated, setHydrated] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     setProfile(storage.getProfile());
@@ -54,12 +51,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUser: (next: AuthProfile) => {
         storage.setProfile(next);
         setProfile(next);
-        setSidebarOpen(true);
       },
       clearUser: () => {
         storage.clear();
         setProfile(null);
-        setSidebarOpen(false);
       },
     }),
     [],
@@ -71,11 +66,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       roleName,
       navigation,
       hydrated,
-      sidebarOpen,
-      setSidebarOpen,
       actions,
     }),
-    [profile, roleName, navigation, hydrated, sidebarOpen, actions],
+    [profile, roleName, navigation, hydrated, actions],
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

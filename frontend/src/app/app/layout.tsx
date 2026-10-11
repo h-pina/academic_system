@@ -2,27 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import ContentHeader from "@/components/ContentHeader";
-import Header from "@/components/Header";
-import NoProfileNotice from "@/components/NoProfileNotice";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import Sidebar from "@/components/Sidebar";
+import NoProfileNotice from "@/components/NoProfileNotice";
+import AppShell from "@/components/shell/AppShell";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
-import { canAccessRoute, resolvePageTitle } from "@/lib/access";
+import { canAccessRoute } from "@/lib/access";
 import type { AuthProfile } from "@/types";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    profile,
-    hydrated,
-    navigation,
-    sidebarOpen,
-    setSidebarOpen,
-    actions,
-  } = useUser();
+  const { profile, roleName, hydrated, navigation, actions } = useUser();
   const { request } = useApi();
   const refreshed = useRef(false);
 
@@ -44,13 +35,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const roles = profile?.roles ?? [];
   const currentRoute = pathname.replace("/app/", "").split("/")[0];
   const isHome = pathname === "/app";
-  const forbidden = !isHome && !canAccessRoute(roles, currentRoute);
+  const allowed = isHome ? roles.length > 0 : canAccessRoute(roles, currentRoute);
 
   useEffect(() => {
-    if (hydrated && profile && roles.length > 0 && forbidden) {
+    if (hydrated && profile && roles.length > 0 && !allowed) {
       router.replace("/app");
     }
-  }, [hydrated, profile, roles.length, forbidden, router]);
+  }, [hydrated, profile, roles.length, allowed, router]);
 
   if (!hydrated || !profile) {
     return (
@@ -60,53 +51,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const title = resolvePageTitle(currentRoute);
+  const user = { name: profile.name, roleLabel: roleName };
 
+  // A person with no profile has no modules; they only see the notice and
+  // their own data.
   if (roles.length === 0) {
     return (
-      <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
-        <Header />
-        <main className="flex-1 overflow-auto">
-          {canAccessRoute(roles, currentRoute) ? children : <NoProfileNotice />}
-        </main>
-      </div>
+      <AppShell sections={null} user={user} onSignOut={() => actions.clearUser()}>
+        {allowed ? children : <NoProfileNotice />}
+      </AppShell>
     );
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
-      <Header />
-
-      <div className="relative flex flex-1 overflow-hidden">
-        <aside
-          className={`${
-            sidebarOpen ? "w-72" : "w-0 -translate-x-full"
-          } shrink-0 overflow-hidden border-r border-slate-200 bg-surface transition-all duration-300 ease-in-out`}
-        >
-          <div className="flex h-full w-72 flex-col">
-            <Sidebar sections={navigation} onNavigate={() => setSidebarOpen(false)} />
-          </div>
-        </aside>
-
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-
-          {!isHome && (
-            <ContentHeader
-              title={title}
-              onToggleMenu={() => {
-                setSidebarOpen(true);
-                router.push("/app");
-              }}
-            />
-          )}
-
-          <div className="flex-1 overflow-auto">
-            <div className="mx-auto h-full w-full max-w-6xl">
-              {forbidden ? null : children}
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    <AppShell
+      sections={navigation}
+      user={user}
+      onSignOut={() => actions.clearUser()}
+    >
+      {allowed ? children : null}
+    </AppShell>
   );
 }

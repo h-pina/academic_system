@@ -78,11 +78,34 @@ Everything lives in `frontend/src/components/ui/` and is imported from
 Rules of thumb: wire every control through `Field`; give every icon-only
 control a label; show state in text as well as colour; never hard-code colours.
 
+## Application shell
+
+`frontend/src/components/shell/` holds the frame of every signed-in screen
+(`AppShell`): a skip link, the top bar (menu button, brand, theme toggle,
+user menu), the sidebar, breadcrumbs and the content area.
+
+- **Sidebar.** Icon and label, grouped by purpose. On wide screens (1024px
+  and up) it collapses to an icon rail; the choice is remembered
+  (`@academic:sidebar`). On small screens it becomes a drawer opened from the
+  menu button, with focus trapped and Esc to close.
+- **Top bar.** The user menu holds "Meus dados", "Atalhos de teclado" and
+  "Sair".
+- **Breadcrumbs.** Module, then nested page (for example Cursos e matrizes >
+  Matriz curricular); identifiers are skipped.
+- **Keyboard.** `/` focuses the page's search field, `M` opens or collapses
+  the menu; neither fires while typing or with a modifier key. After a
+  client-side navigation focus moves to the content, so screen readers announce
+  the new page. The first tab stop is "Ir para o conteúdo".
+- **Landmarks.** `header`, `nav` (Módulos), `aside` (Navegação) and `main`.
+
+Pure logic (sidebar state, active item, breadcrumbs, shortcuts) is in
+`frontend/src/lib/shell.ts` and is unit-tested.
+
 ## Status
 
-Tokens, themes, fonts, brand mark and the component library are in place.
-Per-profile navigation (task 16), the application shell (17) and the migration
-of every screen (18) build on them. Until then the screens keep their own form
+Tokens, themes, fonts, brand mark, the component library, per-profile
+navigation and the application shell are in place. The migration of every
+screen to the library (task 18) builds on them. Until then the screens keep their own form
 modals; `Button`, `ConfirmDialog`, `StatusBadge`, `Pagination` and the toast
 host already render through the library, and the remapped Tailwind scales keep
 the rest themed.
