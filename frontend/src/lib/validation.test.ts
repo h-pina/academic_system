@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  isValidCode,
+  validateCourseDraft,
+  validateDepartmentDraft,
   validateStudentDraft,
+  validateSubjectDraft,
   validateTeacherDraft,
   type StudentDraft,
   type TeacherDraft,
@@ -73,5 +77,75 @@ describe("validateTeacherDraft", () => {
       "Selecione o departamento.",
       "Selecione a titulação.",
     ]);
+  });
+});
+
+describe("isValidCode", () => {
+  it.each(["DCC", "mat-101", "CC_2", "AB"])("accepts %s", (code) => {
+    expect(isValidCode(code)).toBe(true);
+  });
+
+  it.each(["", "A", "a b", "ção", "X".repeat(21)])("rejects %j", (code) => {
+    expect(isValidCode(code)).toBe(false);
+  });
+});
+
+describe("validateDepartmentDraft", () => {
+  it("accepts a valid department", () => {
+    expect(validateDepartmentDraft({ name: "Física", code: "FIS" })).toEqual([]);
+  });
+
+  it("rejects a short name and an invalid code", () => {
+    expect(validateDepartmentDraft({ name: "Fi", code: "a b" })).toHaveLength(2);
+  });
+});
+
+describe("validateCourseDraft", () => {
+  const course = {
+    name: "Ciência da Computação",
+    code: "CC",
+    departmentId: 1,
+    totalSemesters: 8 as number | "",
+  };
+
+  it("accepts a valid course", () => {
+    expect(validateCourseDraft(course)).toEqual([]);
+  });
+
+  it.each([0, 21, 2.5, ""])("rejects %j semesters", (totalSemesters) => {
+    expect(
+      validateCourseDraft({ ...course, totalSemesters: totalSemesters as number | "" }),
+    ).toHaveLength(1);
+  });
+
+  it("requires a department", () => {
+    expect(validateCourseDraft({ ...course, departmentId: 0 })).toEqual([
+      "Selecione o departamento.",
+    ]);
+  });
+});
+
+describe("validateSubjectDraft", () => {
+  const subject = {
+    name: "Cálculo I",
+    code: "MAT101",
+    workloadHours: 90 as number | "",
+    description: "",
+  };
+
+  it("accepts a valid subject", () => {
+    expect(validateSubjectDraft(subject)).toEqual([]);
+  });
+
+  it.each([0, 1001, 1.5, ""])("rejects %j hours", (workloadHours) => {
+    expect(
+      validateSubjectDraft({ ...subject, workloadHours: workloadHours as number | "" }),
+    ).toHaveLength(1);
+  });
+
+  it("limits the description to 500 characters", () => {
+    expect(
+      validateSubjectDraft({ ...subject, description: "x".repeat(501) }),
+    ).toHaveLength(1);
   });
 });

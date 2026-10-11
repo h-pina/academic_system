@@ -3,8 +3,11 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BookOpen,
+  Building2,
   ClipboardList,
   GraduationCap,
+  Library,
   Presentation,
   Users,
   type LucideIcon,
@@ -26,6 +29,18 @@ const ROUTE_META: Record<
   teachers: {
     icon: Presentation,
     description: "Consulte e cadastre professores e seus departamentos.",
+  },
+  departments: {
+    icon: Building2,
+    description: "Departamentos acadêmicos, seus cursos e professores.",
+  },
+  courses: {
+    icon: Library,
+    description: "Cursos e a matriz curricular de cada um.",
+  },
+  subjects: {
+    icon: BookOpen,
+    description: "Disciplinas, cargas horárias e pré-requisitos.",
   },
 };
 

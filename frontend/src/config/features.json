@@ -16,5 +16,23 @@
     "label": "Professores",
     "route": "teachers",
     "roles": ["admin", "secretary", "teacher"]
+  },
+  {
+    "code": 4,
+    "label": "Departamentos",
+    "route": "departments",
+    "roles": ["admin", "secretary", "teacher", "student"]
+  },
+  {
+    "code": 5,
+    "label": "Cursos",
+    "route": "courses",
+    "roles": ["admin", "secretary", "teacher", "student"]
+  },
+  {
+    "code": 6,
+    "label": "Disciplinas",
+    "route": "subjects",
+    "roles": ["admin", "secretary", "teacher", "student"]
   }
 ]

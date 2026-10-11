@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
+  Building2,
   ClipboardList,
   GraduationCap,
+  Library,
   Presentation,
   Users,
   type LucideIcon,
@@ -20,6 +23,9 @@ const ROUTE_ICONS: Record<string, LucideIcon> = {
   "register-users": Users,
   students: GraduationCap,
   teachers: Presentation,
+  departments: Building2,
+  courses: Library,
+  subjects: BookOpen,
 };
 
 export default function Sidebar({ items, onNavigate }: SidebarProps) {

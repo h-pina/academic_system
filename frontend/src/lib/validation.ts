@@ -85,3 +85,79 @@ export function validateTeacherDraft(
   }
   return errors;
 }
+
+const CODE_PATTERN = /^[A-Za-z0-9_-]{2,20}$/;
+export const MAX_SEMESTERS = 20;
+export const MAX_WORKLOAD_HOURS = 1000;
+
+export function isValidCode(value: string): boolean {
+  return CODE_PATTERN.test(value.trim());
+}
+
+const CODE_ERROR = 'O código deve ter de 2 a 20 letras, números, "-" ou "_".';
+
+export interface DepartmentDraft {
+  name: string;
+  code: string;
+}
+
+export function validateDepartmentDraft(draft: DepartmentDraft): string[] {
+  const errors: string[] = [];
+  if (draft.name.trim().length < MIN_NAME_LENGTH) {
+    errors.push(`O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`);
+  }
+  if (!isValidCode(draft.code)) errors.push(CODE_ERROR);
+  return errors;
+}
+
+export interface CourseDraft {
+  name: string;
+  code: string;
+  departmentId: number;
+  totalSemesters: number | "";
+}
+
+export function validateCourseDraft(draft: CourseDraft): string[] {
+  const errors: string[] = [];
+  if (draft.name.trim().length < MIN_NAME_LENGTH) {
+    errors.push(`O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`);
+  }
+  if (!isValidCode(draft.code)) errors.push(CODE_ERROR);
+  if (!draft.departmentId) errors.push("Selecione o departamento.");
+  if (
+    draft.totalSemesters === "" ||
+    !Number.isInteger(draft.totalSemesters) ||
+    draft.totalSemesters < 1 ||
+    draft.totalSemesters > MAX_SEMESTERS
+  ) {
+    errors.push(`O número de semestres deve estar entre 1 e ${MAX_SEMESTERS}.`);
+  }
+  return errors;
+}
+
+export interface SubjectDraft {
+  name: string;
+  code: string;
+  workloadHours: number | "";
+  description: string;
+}
+
+export function validateSubjectDraft(draft: SubjectDraft): string[] {
+  const errors: string[] = [];
+  if (draft.name.trim().length < MIN_NAME_LENGTH) {
+    errors.push(`O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`);
+  }
+  if (!isValidCode(draft.code)) errors.push(CODE_ERROR);
+  if (
+    draft.workloadHours === "" ||
+    !Number.isInteger(draft.workloadHours) ||
+    draft.workloadHours < 1 ||
+    draft.workloadHours > MAX_WORKLOAD_HOURS
+  ) {
+    errors.push(`A carga horária deve estar entre 1 e ${MAX_WORKLOAD_HOURS} horas.`);
+  }
+  if (draft.description.length > 500) {
+    errors.push("A descrição pode ter no máximo 500 caracteres.");
+  }
+  return errors;
+}
