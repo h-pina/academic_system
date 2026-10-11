@@ -8,7 +8,13 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { Button as UiButton, IconButton } from "@/components/ui/Button";
 
+/**
+ * Adapter that keeps the original action-oriented API (`variant="edit"`,
+ * `label`...) while rendering the component library's buttons, so every
+ * screen already shares one look. New code should use `@/components/ui`.
+ */
 export type ButtonVariant =
   | "add"
   | "save"
@@ -25,26 +31,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   hint?: string;
 }
 
-const FULL_STYLES: Record<ButtonVariant, string> = {
-  save: "bg-brand-600 hover:bg-brand-700 text-white shadow-card",
-  cancel: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
-  add: "bg-brand-600 hover:bg-brand-700 text-white shadow-card",
-  edit: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
-  delete: "bg-red-600 hover:bg-red-700 text-white shadow-card",
-  close: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
-  back: "bg-surface hover:bg-slate-50 text-slate-700 border border-slate-300",
-};
-
-const ICON_ONLY_STYLES: Record<ButtonVariant, string> = {
-  save: "text-brand-600 hover:bg-brand-50",
-  cancel: "text-slate-500 hover:bg-slate-100",
-  add: "text-brand-600 hover:bg-brand-50",
-  edit: "text-slate-500 hover:bg-slate-100 hover:text-brand-600",
-  delete: "text-slate-400 hover:bg-red-50 hover:text-red-600",
-  close: "text-slate-500 hover:bg-slate-100",
-  back: "text-slate-500 hover:bg-slate-100",
-};
-
 const ICONS: Record<ButtonVariant, LucideIcon> = {
   save: Save,
   cancel: X,
@@ -55,37 +41,67 @@ const ICONS: Record<ButtonVariant, LucideIcon> = {
   back: ArrowLeft,
 };
 
+const STYLE: Record<ButtonVariant, "primary" | "secondary" | "ghost" | "danger"> = {
+  save: "primary",
+  add: "primary",
+  cancel: "secondary",
+  edit: "secondary",
+  close: "secondary",
+  back: "secondary",
+  delete: "danger",
+};
+
+const ACCESSIBLE_NAME: Record<ButtonVariant, string> = {
+  save: "Salvar",
+  cancel: "Cancelar",
+  add: "Adicionar",
+  edit: "Editar",
+  delete: "Excluir",
+  close: "Fechar",
+  back: "Voltar",
+};
+
 export default function Button({
   label,
   variant,
   loading = false,
   hint = "",
-  className = "",
-  disabled,
+  className,
   ...rest
 }: ButtonProps) {
-  const hasLabel = Boolean(label && label.trim().length > 0);
   const Icon = ICONS[variant];
+  const hasLabel = Boolean(label && label.trim().length > 0);
+
+  if (hasLabel) {
+    return (
+      <UiButton
+        {...rest}
+        variant={STYLE[variant]}
+        loading={loading}
+        title={hint || undefined}
+        icon={<Icon className="h-4 w-4" />}
+        className={className}
+      >
+        {label}
+      </UiButton>
+    );
+  }
 
   return (
-    <button
+    <IconButton
       {...rest}
-      title={hint}
-      disabled={loading || disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
-        hasLabel
-          ? `px-4 py-2 text-sm ${FULL_STYLES[variant]}`
-          : `p-1.5 ${ICON_ONLY_STYLES[variant]}`
-      } ${className}`}
+      label={hint || ACCESSIBLE_NAME[variant]}
+      variant={variant === "delete" ? "ghost" : "ghost"}
+      loading={loading}
+      className={
+        variant === "delete"
+          ? "text-slate-400 hover:bg-red-50 hover:text-red-600"
+          : variant === "edit"
+            ? "hover:text-brand-600"
+            : className
+      }
     >
-      {loading ? (
-        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      ) : (
-        <>
-          <Icon className="h-4 w-4" />
-          {hasLabel && <span>{label}</span>}
-        </>
-      )}
-    </button>
+      <Icon className="h-4 w-4" />
+    </IconButton>
   );
 }

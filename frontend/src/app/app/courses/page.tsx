@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ListTree } from "lucide-react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import CourseFormModal, {
   type CourseSavePayload,
 } from "@/components/courses/CourseFormModal";
-import Pagination from "@/components/Pagination";
-import StatusBadge from "@/components/StatusBadge";
+import Pagination from "@/components/ui/Pagination";
+import { StatusBadge } from "@/components/ui/Badge";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -226,7 +226,7 @@ export default function CoursesPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Excluir curso"
         message={`Excluir o curso "${toRemove?.name}" e a sua matriz curricular? Só é possível se não houver alunos; caso contrário, inative o curso.`}

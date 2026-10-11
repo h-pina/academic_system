@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
-import Pagination from "@/components/Pagination";
-import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from "@/components/ui/Pagination";
+import { StatusBadge } from "@/components/ui/Badge";
 import TeacherFormModal, {
   type TeacherSavePayload,
 } from "@/components/teachers/TeacherFormModal";
@@ -239,7 +239,7 @@ export default function TeachersPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Remover vínculo de professor"
         message={`Remover o vínculo de professor de "${toRemove?.name}"? A pessoa continua cadastrada; para encerrar o vínculo preservando o histórico, prefira alterar a situação.`}

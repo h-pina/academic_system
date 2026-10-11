@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
-import Pagination from "@/components/Pagination";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from "@/components/ui/Pagination";
 import StaffFormModal, {
   type StaffSavePayload,
 } from "@/components/staff/StaffFormModal";
-import StatusBadge from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/ui/Badge";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -176,7 +176,7 @@ export default function StaffPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Remover vínculo administrativo"
         message={`Remover o vínculo administrativo de "${toRemove?.name}"? A pessoa continua cadastrada. Não é possível remover você mesmo nem o último administrador ativo.`}

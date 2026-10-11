@@ -116,3 +116,12 @@ describe("menu for each role (navigation matrix)", () => {
     expect(canAccessRoute(["teacher"], "courses")).toBe(true);
   });
 });
+
+describe("hidden routes", () => {
+  it("stay out of the menu but remain reachable by role", () => {
+    const routes = buildMenu(["admin"]).map((item) => item.route);
+    expect(routes).not.toContain("design");
+    expect(canAccessRoute(["admin"], "design")).toBe(true);
+    expect(canAccessRoute([], "design")).toBe(false);
+  });
+});

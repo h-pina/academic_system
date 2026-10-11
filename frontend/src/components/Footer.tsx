@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { Toast } from "@/components/ui/Toast";
 import { useMessage } from "@/context/MessageContext";
 
+/** Hosts the transient messages raised through `useMessage`. */
 export default function Footer() {
   const { message, visible, hideMessage } = useMessage();
   const ref = useRef<HTMLDivElement>(null);
@@ -22,42 +23,14 @@ export default function Footer() {
 
   if (!message || !visible) return null;
 
-  const tone = {
-    ERROR: {
-      wrap: "border-red-200 bg-red-50 text-red-800",
-      icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
-    },
-    WARNING: {
-      wrap: "border-amber-200 bg-amber-50 text-amber-900",
-      icon: <Info className="h-5 w-5 text-amber-500" />,
-    },
-    SUCCESS: {
-      wrap: "border-emerald-200 bg-emerald-50 text-emerald-800",
-      icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
-    },
-  }[message.type];
-
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center p-4 sm:justify-end">
-      <div
-        ref={ref}
-        role="status"
-        aria-live="polite"
-        className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border px-4 py-3 shadow-panel animate-slide-up ${tone.wrap}`}
-      >
-        <span className="mt-0.5 shrink-0">{tone.icon}</span>
-        <ul className="flex-1 space-y-1 text-sm">
-          {message.messages.map((line, index) => (
-            <li key={index}>{line}</li>
-          ))}
-        </ul>
-        <button
-          onClick={hideMessage}
-          className="shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100"
-          aria-label="Fechar"
-        >
-          <X className="h-4 w-4" />
-        </button>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex justify-center p-4 sm:justify-end">
+      <div ref={ref} className="w-full max-w-md">
+        <Toast
+          type={message.type}
+          messages={message.messages}
+          onDismiss={hideMessage}
+        />
       </div>
     </div>
   );

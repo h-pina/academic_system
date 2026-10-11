@@ -155,8 +155,9 @@ export function tailwindColorEntries(): Record<string, string | Record<string, s
       SCALE_STEPS.map((step) => [String(step), ref(`${scaleName}-${step}`)]),
     );
   }
+  // Kebab-case keys so the classes read `bg-tile-blue`, matching the variables.
   for (const name of Object.keys(light.colors)) {
-    entries[name] = ref(kebab(name));
+    entries[kebab(name)] = ref(kebab(name));
   }
   return entries;
 }

@@ -60,10 +60,29 @@ guarded by `src/styles/tokens.test.ts` (WCAG AA for text, links, solid
 buttons, state tints and dashboard tiles), so a change that makes text
 unreadable fails the tests.
 
+## Components
+
+Everything lives in `frontend/src/components/ui/` and is imported from
+`@/components/ui`. A live catalogue of every component and state is at
+`/app/design` (development only).
+
+| Component | Use |
+|-----------|-----|
+| `Button`, `IconButton` | Actions. `IconButton` requires a `label`, which becomes its accessible name |
+| `Field` + `Input`, `Select`, `Textarea`, `Checkbox` | Form controls. `Field` links label, hint and error through ids and ARIA |
+| `Modal`, `ConfirmDialog` | Dialogs on the Radix dialog primitive: focus trap, Esc, focus returned to the opener |
+| `DataTable` | Declarative columns, sticky header, keyboard-reachable scroll, skeleton and empty states, optional row action |
+| `Badge`, `Avatar`, `StatTile`, `SegmentedFilter` | State pills, initials, indicators, single-choice filter (radio group with arrow keys) |
+| `Toast`, `EmptyState`, `Skeleton`, `Pagination` | Messages, empty lists, loading placeholders, paging |
+
+Rules of thumb: wire every control through `Field`; give every icon-only
+control a label; show state in text as well as colour; never hard-code colours.
+
 ## Status
 
-The tokens, themes, fonts and brand mark are in place. The component library
-(task 15), per-profile navigation (16), application shell (17) and migration of
-every screen (18) build on this base; until then the legacy components keep
-working because the Tailwind `slate`, state and `brand` scales are remapped to
-the tokens.
+Tokens, themes, fonts, brand mark and the component library are in place.
+Per-profile navigation (task 16), the application shell (17) and the migration
+of every screen (18) build on them. Until then the screens keep their own form
+modals; `Button`, `ConfirmDialog`, `StatusBadge`, `Pagination` and the toast
+host already render through the library, and the remapped Tailwind scales keep
+the rest themed.

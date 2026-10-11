@@ -5,8 +5,8 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
-import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { StatusBadge } from "@/components/ui/Badge";
 import { useMessage } from "@/context/MessageContext";
 import { useAllItems } from "@/hooks/useAllItems";
 import { useApi } from "@/hooks/useApi";
@@ -251,7 +251,7 @@ export default function CurriculumPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Remover da matriz"
         message={`Remover "${toRemove?.name}" da matriz deste curso? A disciplina continua cadastrada.`}

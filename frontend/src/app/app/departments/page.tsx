@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DepartmentFormModal from "@/components/departments/DepartmentFormModal";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
@@ -141,7 +141,7 @@ export default function DepartmentsPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Excluir departamento"
         message={`Excluir o departamento "${toRemove?.name}"? Só é possível se ele não tiver cursos nem professores.`}

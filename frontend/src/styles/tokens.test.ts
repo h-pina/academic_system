@@ -54,7 +54,8 @@ describe("token sets", () => {
     const entries = tailwindColorEntries();
     expect(entries.brand).toMatchObject({ "600": "rgb(var(--c-brand-600) / <alpha-value>)" });
     expect(entries.canvas).toBe("rgb(var(--c-canvas) / <alpha-value>)");
-    expect(entries.tileMint).toBe("rgb(var(--c-tile-mint) / <alpha-value>)");
+    expect(entries["tile-mint"]).toBe("rgb(var(--c-tile-mint) / <alpha-value>)");
+    expect(entries.tileMint).toBeUndefined();
   });
 });
 

@@ -31,6 +31,8 @@ export interface Feature {
   label: string;
   route: string;
   roles: RoleName[];
+  /** Reachable by URL but not listed in the menu. */
+  hidden?: boolean;
 }
 
 export interface MenuItem {

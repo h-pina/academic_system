@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UserFormModal, {
   type UserDraft,
 } from "@/components/users/UserFormModal";
@@ -180,7 +180,7 @@ export default function RegisterUsersPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={userToDelete !== null}
         title="Confirmar exclusão"
         message={`Tem certeza de que deseja excluir o usuário "${userToDelete?.name}"? Esta ação não pode ser desfeita.`}

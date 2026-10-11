@@ -31,7 +31,9 @@ export function resolveRoleLabel(roles: readonly RoleName[]): string {
 }
 
 export function buildMenu(roles: readonly RoleName[]): MenuItem[] {
-  return FEATURES.filter((feature) => hasAnyRole(roles, feature.roles)).map(
+  return FEATURES.filter(
+    (feature) => !feature.hidden && hasAnyRole(roles, feature.roles),
+  ).map(
     (feature) => ({ route: feature.route, label: feature.label }),
   );
 }

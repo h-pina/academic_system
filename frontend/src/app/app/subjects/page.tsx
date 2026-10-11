@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
-import ConfirmModal from "@/components/ConfirmModal";
-import Pagination from "@/components/Pagination";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from "@/components/ui/Pagination";
 import SubjectFormModal, {
   type SubjectSavePayload,
 } from "@/components/subjects/SubjectFormModal";
@@ -215,7 +215,7 @@ export default function SubjectsPage() {
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         open={toRemove !== null}
         title="Excluir disciplina"
         message={`Excluir a disciplina "${toRemove?.name}"? Só é possível se ela não estiver em nenhuma matriz nem for pré-requisito de outra disciplina.`}
