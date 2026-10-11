@@ -1,0 +1,9 @@
+[
+  { "code": 1, "label": "Register Users", "route": "register-users" },
+  { "code": 2, "label": "Register Positions", "route": "register-positions" },
+  {
+    "code": 3,
+    "label": "Generate Material Requisition",
+    "route": "generate-requisition"
+  }
+]

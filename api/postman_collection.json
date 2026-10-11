@@ -1,0 +1,295 @@
+{
+  "info": {
+    "name": "Products Registry API",
+    "description": "NestJS port of the original Flask login_routes.py blueprint.\n\n## Getting started\n1. Start the API: `npm run start:dev` (defaults to http://localhost:3001). On first boot an empty database is created and seeded (see `src/seed/`).\n2. Run **Auth > Login**. The default `cpf` / `password` variables match the seeded `Alice Admin` account (`12345678909` / `password123`). The login test script stores the JWT in the `accessToken` collection variable, which every protected request uses automatically via collection-level Bearer auth.\n\n## Seeded accounts\n- `12345678909` / `password123` - Alice Admin (roleId 1)\n- `98765432100` / `password123` - Bob Manager (roleId 2)\n- `11122233396` / `password123` - Carol Analyst (roleId 3)\n- `45678912364` - Dave Pending, no password set (use for the access-check / reset flow)\n\n## Variables\n- `baseUrl` - API origin, default `http://localhost:3001`\n- `accessToken` - populated by Auth > Login\n- `cpf` - CPF used across requests (default is the seeded Alice Admin)\n- `password` / `newPassword` - credentials for the login / reset flows\n- `positionId` - id used by the Positions by-id requests\n\nPublic routes (`POST /auth/login`, `GET /auth/access/:cpf`, `PUT /auth/password/reset`, `GET /users/:cpf/email`, `GET /positions`) override auth to \"No Auth\".",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "cpf", "value": "12345678909", "type": "string" },
+    { "key": "password", "value": "password123", "type": "string" },
+    { "key": "newPassword", "value": "newpassword8", "type": "string" },
+    { "key": "targetCpf", "value": "32165498791", "type": "string" },
+    { "key": "positionId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ok = pm.response.code === 200 || pm.response.code === 201;",
+                  "pm.test('login succeeded', () => pm.expect(ok).to.be.true);",
+                  "if (ok) {",
+                  "  const token = pm.response.json().accessToken;",
+                  "  pm.collectionVariables.set('accessToken', token);",
+                  "  console.log('accessToken stored');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{cpf}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Public. Returns `{ accessToken }`. The test script saves it to the `accessToken` collection variable."
+          }
+        },
+        {
+          "name": "Check access (by CPF)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/access/{{cpf}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "access", "{{cpf}}"]
+            },
+            "description": "Public. Returns `{ hasPassword, name }` - used by the frontend to choose between a \"set password\" and a login form. 404 if the CPF is unknown."
+          }
+        },
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "JWT. Returns `{ cpf, name, roleId }` for the authenticated user (identity taken from the token)."
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"45678912364\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "password", "reset"]
+            },
+            "description": "Public (functional parity with the original `PUT /alterarSenha`). Sets a new password given only the CPF. `newPassword` must be at least 8 characters. 404 if the CPF is unknown.\n\nDefaults to the seeded `Dave Pending` CPF (`45678912364`), who starts with no password - after this you can log in as that CPF with `{{newPassword}}`. Point it at `{{cpf}}` to reset Alice instead (that will invalidate the `{{password}}` variable)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "JWT. Lists all users."
+          }
+        },
+        {
+          "name": "User exists (by CPF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{targetCpf}}/exists",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{targetCpf}}", "exists"]
+            },
+            "description": "JWT. Returns `{ exists: boolean }`. Uses `{{targetCpf}}` (set to a seeded CPF like `{{cpf}}` to see `true`)."
+          }
+        },
+        {
+          "name": "Get user email (by CPF)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{cpf}}/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{cpf}}", "email"]
+            },
+            "description": "Public (parity with the original route). Returns `{ email }` for the given CPF. Defaults to the seeded `{{cpf}}`."
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{targetCpf}}\",\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"roleId\": 1,\n  \"password\": \"newpassword8\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "JWT. Creates a user (uses `{{targetCpf}}`, which is not seeded, so this succeeds on a fresh DB). `password` is optional (min 8 chars if supplied); `name` min 3 chars; `email` must be valid and unique; `roleId` integer >= 1. Returns 201. Unknown body properties are rejected (global ValidationPipe with `forbidNonWhitelisted`)."
+          }
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "JWT. Updates the authenticated user's own name/email. Identity comes from the token, not the URL. To also change the password, include both `currentPassword` and `newPassword` (each min 8 chars):\n\n{\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
+          }
+        },
+        {
+          "name": "Update user (by CPF, admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"roleId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{targetCpf}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{targetCpf}}"]
+            },
+            "description": "JWT. Admin-style update of another user's name/email/role. All three fields required. Run **Create user** first so `{{targetCpf}}` exists."
+          }
+        },
+        {
+          "name": "Delete user (by CPF)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{targetCpf}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{targetCpf}}"]
+            },
+            "description": "JWT. Deletes the user. Returns 204 No Content. Targets `{{targetCpf}}` so it won't remove a seeded account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Positions",
+      "item": [
+        {
+          "name": "List positions",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/positions",
+              "host": ["{{baseUrl}}"],
+              "path": ["positions"]
+            },
+            "description": "Public. Lists all job positions (feeds a dropdown). An empty list is a normal 200 response."
+          }
+        },
+        {
+          "name": "Get position (by id)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/positions/{{positionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["positions", "{{positionId}}"]
+            },
+            "description": "JWT. Non-numeric id -> 400 (ParseIntPipe). Unknown id -> 404."
+          }
+        },
+        {
+          "name": "Create position",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Analyst\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/positions",
+              "host": ["{{baseUrl}}"],
+              "path": ["positions"]
+            },
+            "description": "JWT. `name` min 2 chars. Returns 201."
+          }
+        },
+        {
+          "name": "Update position (by id)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Senior Analyst\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/positions/{{positionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["positions", "{{positionId}}"]
+            },
+            "description": "JWT. Id comes from the URL, not the body. `name` min 2 chars."
+          }
+        },
+        {
+          "name": "Delete position (by id)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/positions/{{positionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["positions", "{{positionId}}"]
+            },
+            "description": "JWT. Returns 204 No Content."
+          }
+        }
+      ]
+    }
+  ]
+}

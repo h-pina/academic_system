@@ -1,0 +1,68 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+
+@Injectable()
+export class UsersRepository {
+  constructor(
+    @InjectRepository(User)
+    private readonly users: Repository<User>,
+  ) {}
+
+  findAll(): Promise<User[]> {
+    return this.users.find({ order: { name: 'ASC' } });
+  }
+
+  findByCpf(cpf: string): Promise<User | null> {
+    return this.users.findOne({ where: { cpf } });
+  }
+
+  async findEmailByCpf(cpf: string): Promise<string | null> {
+    const user = await this.users.findOne({
+      where: { cpf },
+      select: { email: true },
+    });
+    return user?.email ?? null;
+  }
+
+  exists(cpf: string): Promise<boolean> {
+    return this.users.existsBy({ cpf });
+  }
+
+  async create(user: {
+    cpf: string;
+    name: string;
+    email: string;
+    roleId: number;
+    passwordHash: string | null;
+  }): Promise<void> {
+    await this.users.insert(user);
+  }
+
+  async updateDetails(
+    cpf: string,
+    data: { name: string; email: string; roleId: number },
+  ): Promise<void> {
+    await this.users.update({ cpf }, data);
+  }
+
+  async updateOwnProfile(
+    cpf: string,
+    data: { name: string; email: string; passwordHash?: string },
+  ): Promise<void> {
+    const patch: Partial<User> = { name: data.name, email: data.email };
+    if (data.passwordHash) {
+      patch.passwordHash = data.passwordHash;
+    }
+    await this.users.update({ cpf }, patch);
+  }
+
+  async updatePassword(cpf: string, passwordHash: string): Promise<void> {
+    await this.users.update({ cpf }, { passwordHash });
+  }
+
+  async delete(cpf: string): Promise<void> {
+    await this.users.delete({ cpf });
+  }
+}

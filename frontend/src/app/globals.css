@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background-color: theme("colors.canvas");
+    color: #1f2430;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Consistent, keyboard-friendly focus ring across interactive elements. */
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: none;
+    box-shadow: theme("boxShadow.focus");
+    border-color: theme("colors.brand.500");
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cdd2dc;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b4bac6;
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* ---- Form controls ---------------------------------------------------- */
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .field-input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
+      placeholder:text-slate-400 transition-colors
+      focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15
+      disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500;
+  }
+
+  .field-hint {
+    @apply mt-1 block text-xs text-slate-500;
+  }
+
+  /* ---- Surfaces ------------------------------------------------------------ */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-surface shadow-card;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4
+      backdrop-blur-sm animate-fade-in;
+  }
+
+  .modal-card {
+    @apply w-full rounded-2xl border border-slate-200 bg-surface p-6 shadow-panel animate-scale-in;
+  }
+
+  .modal-title {
+    @apply mb-5 border-b border-slate-200 pb-3 text-lg font-semibold text-slate-900;
+  }
+
+  /* ---- Data tables ------------------------------------------------------- */
+  .data-table {
+    @apply w-full border-collapse text-sm;
+  }
+  .data-table thead th {
+    @apply border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-xs font-semibold
+      uppercase tracking-wide text-slate-500;
+  }
+  .data-table tbody td {
+    @apply border-b border-slate-100 px-4 py-3 text-slate-700 align-middle;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-slate-50/70;
+  }
+}
