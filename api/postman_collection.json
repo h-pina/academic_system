@@ -22,7 +22,8 @@
     { "key": "teacherId", "value": "3", "type": "string" },
     { "key": "teacherCpf", "value": "11144477735", "type": "string" },
     { "key": "departmentId", "value": "1", "type": "string" },
-    { "key": "courseId", "value": "1", "type": "string" }
+    { "key": "courseId", "value": "1", "type": "string" },
+    { "key": "subjectId", "value": "1", "type": "string" }
   ],
   "item": [
     {
@@ -828,6 +829,256 @@
               ]
             },
             "description": "JWT (admin). 409 while it has students; its curriculum is removed with it."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "item": [
+        {
+          "name": "List subjects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subjects?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "JWT (any user with a profile). Paginated. Filters: `q` (code or name), `courseId` (only subjects in that curriculum), `page`, `pageSize`. Each subject includes its `prerequisites` and `courseCount`."
+          }
+        },
+        {
+          "name": "Get subject",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subjects/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "JWT (any user with a profile)."
+          }
+        },
+        {
+          "name": "Create subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subjects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects"
+              ]
+            },
+            "description": "JWT (admin, secretary). `code` is stored in upper case; `workloadHours` 1-1000. 409 on duplicate code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"MAT101\",\n  \"name\": \"Calculus I\",\n  \"workloadHours\": 90,\n  \"description\": \"Limits and derivatives\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update subject",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subjects/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). Any of `code`, `name`, `workloadHours`, `description`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workloadHours\": 75\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete subject",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subjects/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "JWT (admin). 409 while it is in a curriculum or is a prerequisite of another subject."
+          }
+        },
+        {
+          "name": "Set prerequisites",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subjects/{{subjectId}}/prerequisites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subjects",
+                "{{subjectId}}",
+                "prerequisites"
+              ]
+            },
+            "description": "JWT (admin, secretary). Replaces the whole set. 400 for unknown subjects, a subject requiring itself, or any dependency cycle.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prerequisiteIds\": [\n    1,\n    2\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Curriculum",
+      "item": [
+        {
+          "name": "Get curriculum",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}/curriculum",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}",
+                "curriculum"
+              ]
+            },
+            "description": "JWT (any user with a profile). Subjects grouped by semester, with workload totals and prerequisites."
+          }
+        },
+        {
+          "name": "Add subject to curriculum",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}/curriculum",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}",
+                "curriculum"
+              ]
+            },
+            "description": "JWT (admin, secretary). `semester` must be within the course's `totalSemesters`; 409 if the subject is already in the curriculum. `mandatory` defaults to true.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectId\": 1,\n  \"semester\": 1,\n  \"mandatory\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update curriculum item",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}/curriculum/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}",
+                "curriculum",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). `semester` and/or `mandatory`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"semester\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove subject from curriculum",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}/curriculum/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}",
+                "curriculum",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "JWT (admin, secretary). 204; 404 if the subject is not in the curriculum."
           }
         }
       ]
