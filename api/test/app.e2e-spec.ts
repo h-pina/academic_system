@@ -226,3 +226,71 @@ describe('Academic System API (e2e)', () => {
     });
   });
 });
+
+describe('Portuguese error messages (e2e)', () => {
+  let app: INestApplication;
+  let token: string;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = moduleRef.createNestApplication();
+    configureApp(app);
+    await app.init();
+
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ identifier: ADMIN_CPF, password: PASSWORD });
+    token = login.body.accessToken;
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('returns validation errors in Portuguese', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/users')
+      .set({ Authorization: `Bearer ${token}` })
+      .send({ cpf: '123', name: 'A', email: 'x', extra: true })
+      .expect(400);
+
+    expect(res.body.message).toEqual(
+      expect.arrayContaining([
+        'CPF deve ser um CPF válido',
+        'Nome é curto demais',
+        'E-mail deve ser um e-mail válido',
+        'O campo "extra" não é permitido',
+      ]),
+    );
+  });
+
+  it('returns domain errors in Portuguese', async () => {
+    const wrong = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ identifier: ADMIN_CPF, password: 'wrong-password' })
+      .expect(401);
+    expect(wrong.body.message).toBe('CPF, matrícula ou senha inválidos');
+
+    const duplicate = await request(app.getHttpServer())
+      .post('/users')
+      .set({ Authorization: `Bearer ${token}` })
+      .send({ cpf: ADMIN_CPF, name: 'Duplicate Person', email: 'dup@example.com' })
+      .expect(409);
+    expect(duplicate.body.message).toBe('Já existe um usuário com este CPF');
+  });
+
+  it('returns permission errors in Portuguese', async () => {
+    const secretary = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ identifier: '98765432100', password: PASSWORD })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/users')
+      .set({ Authorization: `Bearer ${secretary.body.accessToken}` })
+      .expect(403);
+    expect(res.body.message).toBe('Você não tem permissão para acessar este recurso.');
+  });
+});

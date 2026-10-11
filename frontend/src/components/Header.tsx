@@ -29,7 +29,7 @@ export default function Header() {
 
           <button
             className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
-            title="Edit my data"
+            title="Editar meus dados"
             onClick={() => setProfileOpen(!profileOpen)}
           >
             <UserRound className="h-5 w-5" />
@@ -38,7 +38,7 @@ export default function Header() {
           <button
             onClick={() => actions.clearUser()}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-            title="Sign out"
+            title="Sair"
           >
             <LogOut className="h-5 w-5" />
           </button>

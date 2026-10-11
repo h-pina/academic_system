@@ -42,7 +42,7 @@ export function useApi() {
         if (!token) {
           actions.clearUser();
           if (typeof window !== "undefined") window.location.href = "/login";
-          return fail("Your session has expired. Please sign in again.");
+          return fail("Sua sessão expirou. Entre novamente.");
         }
         headers.set("Authorization", `Bearer ${token.trim()}`);
       }
@@ -62,7 +62,7 @@ export function useApi() {
         if (response.status === 401 && auth) {
           showMessage({
             type: "ERROR",
-            messages: ["Your session has expired. Please sign in again."],
+            messages: ["Sua sessão expirou. Entre novamente."],
           });
           setTimeout(() => {
             actions.clearUser();
@@ -90,11 +90,11 @@ export function useApi() {
         clearTimeout(timeoutId);
         if (error instanceof DOMException && error.name === "AbortError") {
           return fail(
-            "The server took too long to respond. Please check your connection and try again.",
+            "O servidor demorou para responder. Verifique sua conexão e tente novamente.",
           );
         }
         return fail(
-          "Could not reach the server. Please check that you are online.",
+          "Não foi possível acessar o servidor. Verifique sua conexão.",
         );
       } finally {
         stopLoading();
@@ -113,5 +113,5 @@ function extractErrorMessage(body: unknown, status: number): string {
     if (typeof message === "string") return message;
   }
   if (typeof body === "string" && body) return body;
-  return `Server error (${status})`;
+  return `Erro no servidor (${status})`;
 }

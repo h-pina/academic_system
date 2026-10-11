@@ -37,23 +37,23 @@ export default class ErrorBoundary extends React.Component<
             ⚠️
           </div>
           <h1 className="mb-2 text-lg font-semibold text-slate-900">
-            Something went wrong
+            Algo deu errado
           </h1>
           <p className="mb-6 text-sm text-slate-500">
-            An unexpected error occurred in the interface. Please try again.
+            Ocorreu um erro inesperado na interface. Tente novamente.
           </p>
           <div className="flex justify-center gap-3">
             <button
               onClick={() => window.location.reload()}
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
             >
-              Try again
+              Tentar novamente
             </button>
             <button
               onClick={() => (window.location.href = "/")}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Go home
+              Ir para o início
             </button>
           </div>
         </div>

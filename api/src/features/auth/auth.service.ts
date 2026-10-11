@@ -38,7 +38,7 @@ export class AuthService {
   ): Promise<{ hasPassword: boolean; name: string }> {
     const user = await this.findByIdentifier(identifier);
     if (!user || !user.active) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
     return { hasPassword: user.passwordHash !== null, name: user.name };
   }
@@ -50,12 +50,12 @@ export class AuthService {
     const user = await this.findByIdentifier(identifier);
 
     if (!user || !user.active || !user.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('CPF, matrícula ou senha inválidos');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('CPF, matrícula ou senha inválidos');
     }
 
     const accessToken = await this.jwtService.signAsync({
@@ -67,7 +67,7 @@ export class AuthService {
   async getProfile(userId: number): Promise<AuthProfile> {
     const user = await this.usersRepository.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
     return {
       cpf: user.cpf,
@@ -80,7 +80,7 @@ export class AuthService {
   async resetPassword(identifier: string, newPassword: string): Promise<void> {
     const user = await this.findByIdentifier(identifier);
     if (!user || !user.active) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
     const passwordHash = await bcrypt.hash(newPassword, this.saltRounds);
     await this.usersRepository.updatePassword(user.cpf, passwordHash);
@@ -90,7 +90,7 @@ export class AuthService {
     const identifier = resolveLoginIdentifier(raw);
     if (!identifier) {
       throw new BadRequestException(
-        'Enter a valid CPF (11 digits) or registration number (10 digits)',
+        'Informe um CPF (11 dígitos) ou uma matrícula (10 dígitos) válidos',
       );
     }
     return this.usersRepository.findByIdentifier(identifier);

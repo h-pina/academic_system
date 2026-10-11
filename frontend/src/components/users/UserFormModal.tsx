@@ -59,7 +59,7 @@ export default function UserFormModal({
     if (result.ok && result.data.exists) {
       showMessage({
         type: "WARNING",
-        messages: ["A user with this CPF is already registered."],
+        messages: ["Já existe um usuário com este CPF."],
       });
     }
   };
@@ -70,21 +70,21 @@ export default function UserFormModal({
     if (!editing && !isValidCpf(cleanCpf)) {
       showMessage({
         type: "WARNING",
-        messages: ["Please enter a valid CPF."],
+        messages: ["Informe um CPF válido."],
       });
       return;
     }
     if (draft.name.trim().length < 3) {
       showMessage({
         type: "WARNING",
-        messages: ["Name must be at least 3 characters long."],
+        messages: ["O nome deve ter pelo menos 3 caracteres."],
       });
       return;
     }
     if (!editing && draft.password && draft.password.length < 8) {
       showMessage({
         type: "WARNING",
-        messages: ["The password must be at least 8 characters long."],
+        messages: ["A senha deve ter pelo menos 8 caracteres."],
       });
       return;
     }
@@ -100,7 +100,7 @@ export default function UserFormModal({
   return (
     <div className="modal-backdrop">
       <div className="modal-card max-w-lg">
-        <h3 className="modal-title">{editing ? "Edit user" : "New user"}</h3>
+        <h3 className="modal-title">{editing ? "Editar usuário" : "Novo usuário"}</h3>
 
         <div className="space-y-4">
           <label className="block">
@@ -123,7 +123,7 @@ export default function UserFormModal({
           </label>
 
           <label className="block">
-            <span className="field-label">Name *</span>
+            <span className="field-label">Nome *</span>
             <input
               type="text"
               className="field-input"
@@ -135,7 +135,7 @@ export default function UserFormModal({
           </label>
 
           <label className="block">
-            <span className="field-label">Email *</span>
+            <span className="field-label">E-mail *</span>
             <input
               type="email"
               className="field-input"
@@ -148,7 +148,7 @@ export default function UserFormModal({
 
           {!editing && (
             <label className="block">
-              <span className="field-label">Password</span>
+              <span className="field-label">Senha</span>
               <input
                 type="password"
                 className="field-input"
@@ -161,16 +161,16 @@ export default function UserFormModal({
                 }
               />
               <span className="field-hint">
-                Leave blank to let the user set it on first sign-in.
+                Deixe em branco para que a pessoa defina a senha no primeiro acesso.
               </span>
             </label>
           )}
         </div>
 
         <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancel" variant="cancel" onClick={onClose} />
+          <Button label="Cancelar" variant="cancel" onClick={onClose} />
           <Button
-            label={editing ? "Save changes" : "Create"}
+            label={editing ? "Salvar alterações" : "Cadastrar"}
             variant="save"
             loading={loading}
             onClick={handleSave}

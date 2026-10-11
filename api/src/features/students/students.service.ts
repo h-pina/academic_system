@@ -31,7 +31,7 @@ export class StudentsService {
   async get(userId: number): Promise<StudentView> {
     const student = await this.repository.findView(userId);
     if (!student) {
-      throw new NotFoundException('Student not found');
+      throw new NotFoundException('Aluno não encontrado');
     }
     return student;
   }
@@ -49,7 +49,7 @@ export class StudentsService {
 
       const students = manager.getRepository(Student);
       if (await students.existsBy({ userId: user.id })) {
-        throw new ConflictException('This person is already a student');
+        throw new ConflictException('Esta pessoa já possui vínculo de aluno');
       }
 
       await this.provisioning.ensureRegistrationNumber(
@@ -73,7 +73,7 @@ export class StudentsService {
     await this.transactions.run(async (manager) => {
       const students = manager.getRepository(Student);
       if (!(await students.existsBy({ userId }))) {
-        throw new NotFoundException('Student not found');
+        throw new NotFoundException('Aluno não encontrado');
       }
       if (dto.courseId !== undefined) {
         await this.requireActiveCourse(manager, dto.courseId);
@@ -94,7 +94,7 @@ export class StudentsService {
   /** Removes only the student profile; the user and their history stay. */
   async remove(userId: number): Promise<void> {
     if (!(await this.repository.delete(userId))) {
-      throw new NotFoundException('Student not found');
+      throw new NotFoundException('Aluno não encontrado');
     }
   }
 
@@ -104,10 +104,10 @@ export class StudentsService {
   ): Promise<void> {
     const course = await manager.getRepository(Course).findOneBy({ id: courseId });
     if (!course) {
-      throw new BadRequestException('Course not found');
+      throw new BadRequestException('Curso não encontrado');
     }
     if (course.status !== 'active') {
-      throw new BadRequestException('Course is not active');
+      throw new BadRequestException('O curso não está ativo');
     }
   }
 }

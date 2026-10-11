@@ -137,7 +137,7 @@ export class DashboardService {
       relations: { department: true },
     });
     if (!teacher) {
-      throw new NotFoundException('Teacher not found');
+      throw new NotFoundException('Professor não encontrado');
     }
 
     const { department } = teacher;
@@ -182,7 +182,7 @@ export class DashboardService {
       relations: { course: { department: true } },
     });
     if (!student) {
-      throw new NotFoundException('Student not found');
+      throw new NotFoundException('Aluno não encontrado');
     }
     const user = await this.users.findOneByOrFail({ id: userId });
 

@@ -144,7 +144,7 @@ describe('Departments and courses API (e2e)', () => {
         .delete(`/departments/${dcc.id}`)
         .set(admin)
         .expect(409);
-      expect(res.body.message).toMatch(/course/);
+      expect(res.body.message).toMatch(/curso/);
     });
 
     it('deletes an empty department (admin only)', async () => {
@@ -344,7 +344,7 @@ describe('Departments and courses API (e2e)', () => {
         .delete(`/courses/${cc.id}`)
         .set(admin)
         .expect(409);
-      expect(res.body.message).toMatch(/inactivate/);
+      expect(res.body.message).toMatch(/inative/);
 
       const department = await newDepartment();
       const empty = await newCourse(department.id);

@@ -71,10 +71,11 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 | 10  | `10-frontend-cursos-disciplinas.md`  | Telas de cursos, disciplinas e matriz |
 | 11  | `11-navegacao-e-dashboard.md`        | Menu por perfil e dashboard |
 | 12  | `12-testes-e-documentacao.md`        | Testes e documentação |
+| 13  | `13-interface-em-portugues.md`       | Interface e mensagens de erro em português |
 
 ## Ordem de execução
 
-`01 → 03 → 02 → (04, 04b, 05, 06, 07) → 08 → (09, 10) → 11 → 12`
+`01 → 03 → 02 → (04, 04b, 05, 06, 07) → 08 → (09, 10) → 11 → 12 → 13`
 
 > A tarefa 02 depende da 03, pois os perfis são derivados do modelo de dados (`staff`, `teachers`, `students`).
 

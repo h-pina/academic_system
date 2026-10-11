@@ -65,14 +65,14 @@ export default function LoginPage() {
       if (password.length < 8) {
         showMessage({
           type: "WARNING",
-          messages: ["The password must be at least 8 characters long."],
+          messages: ["A senha deve ter pelo menos 8 caracteres."],
         });
         return;
       }
       if (password !== confirmPassword) {
         showMessage({
           type: "ERROR",
-          messages: ["The passwords do not match."],
+          messages: ["As senhas não coincidem."],
         });
         return;
       }
@@ -89,7 +89,7 @@ export default function LoginPage() {
 
       showMessage({
         type: "SUCCESS",
-        messages: ["Password saved. Signing you in..."],
+        messages: ["Senha salva. Entrando..."],
       });
     }
 
@@ -126,7 +126,7 @@ export default function LoginPage() {
           <h1 className="text-base font-semibold text-slate-900">
             Sistema Acadêmico
           </h1>
-          <p className="text-sm text-slate-500">Sign in to continue</p>
+          <p className="text-sm text-slate-500">Entre para continuar</p>
         </div>
 
         <div className="card p-6 sm:p-8">
@@ -141,7 +141,7 @@ export default function LoginPage() {
               </button>
             )}
             <h2 className="flex-1 text-center text-sm font-semibold uppercase tracking-wide text-slate-500">
-              {identified ? "Password" : "Identify yourself"}
+              {identified ? "Senha" : "Identifique-se"}
             </h2>
           </div>
 
@@ -169,20 +169,20 @@ export default function LoginPage() {
                 type="submit"
                 className="rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
               >
-                Continue
+                Continuar
               </button>
             </form>
           ) : (
             <form className="flex flex-col gap-4" onSubmit={handleSignIn}>
               <div className="rounded-lg bg-slate-50 px-4 py-3 text-center">
-                <span className="text-xs text-slate-500">Welcome</span>
+                <span className="text-xs text-slate-500">Olá</span>
                 <p className="font-semibold text-slate-900">{identified.name}</p>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label htmlFor="password" className="field-label">
-                    {needsNewPassword ? "Create a new password" : "Password"}
+                    {needsNewPassword ? "Crie uma nova senha" : "Senha"}
                   </label>
                   <div className="relative">
                     <input
@@ -206,7 +206,7 @@ export default function LoginPage() {
                 {needsNewPassword && (
                   <div>
                     <label htmlFor="confirm" className="field-label">
-                      Confirm password
+                      Confirmar senha
                     </label>
                     <input
                       id="confirm"
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 type="submit"
                 className="mt-1 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
               >
-                {needsNewPassword ? "Save password and sign in" : "Sign in"}
+                {needsNewPassword ? "Salvar senha e entrar" : "Entrar"}
               </button>
 
               {identified.hasPassword && !resetting && (
@@ -240,7 +240,7 @@ export default function LoginPage() {
                     }}
                     className="text-sm font-medium text-brand-600 hover:underline"
                   >
-                    Forgot your password?
+                    Esqueceu a senha?
                   </button>
                 </div>
               )}

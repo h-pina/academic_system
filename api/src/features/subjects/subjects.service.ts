@@ -75,7 +75,7 @@ export class SubjectsService {
   async get(id: number): Promise<SubjectView> {
     const subject = await this.subjects.findOneBy({ id });
     if (!subject) {
-      throw new NotFoundException('Subject not found');
+      throw new NotFoundException('Disciplina não encontrada');
     }
     return (await this.toViews([subject]))[0];
   }
@@ -97,7 +97,7 @@ export class SubjectsService {
 
   async update(id: number, dto: UpdateSubjectDto): Promise<SubjectView> {
     if (!(await this.subjects.existsBy({ id }))) {
-      throw new NotFoundException('Subject not found');
+      throw new NotFoundException('Disciplina não encontrada');
     }
     if (dto.code !== undefined) {
       await this.assertUniqueCode(dto.code.toUpperCase(), id);
@@ -122,7 +122,7 @@ export class SubjectsService {
    */
   async remove(id: number): Promise<void> {
     if (!(await this.subjects.existsBy({ id }))) {
-      throw new NotFoundException('Subject not found');
+      throw new NotFoundException('Disciplina não encontrada');
     }
 
     const [courses, dependents] = await Promise.all([
@@ -131,12 +131,12 @@ export class SubjectsService {
     ]);
     if (courses > 0) {
       throw new ConflictException(
-        `Subject is part of ${courses} course curriculum(s); remove it from them first`,
+        `A disciplina faz parte de ${courses} matriz(es) curricular(es); remova-a delas antes`,
       );
     }
     if (dependents > 0) {
       throw new ConflictException(
-        `Subject is a prerequisite of ${dependents} other subject(s); remove those links first`,
+        `A disciplina é pré-requisito de ${dependents} outra(s) disciplina(s); remova esses vínculos antes`,
       );
     }
     await this.subjects.delete({ id });
@@ -155,23 +155,23 @@ export class SubjectsService {
       const links = manager.getRepository(SubjectPrerequisite);
 
       if (!(await subjects.existsBy({ id }))) {
-        throw new NotFoundException('Subject not found');
+        throw new NotFoundException('Disciplina não encontrada');
       }
 
       const ids = dto.prerequisiteIds;
       if (ids.includes(id)) {
-        throw new BadRequestException('A subject cannot be its own prerequisite');
+        throw new BadRequestException('Uma disciplina não pode ser pré-requisito dela mesma');
       }
       if (ids.length > 0) {
         const found = await subjects.countBy({ id: In(ids) });
         if (found !== ids.length) {
-          throw new BadRequestException('Some prerequisite subjects do not exist');
+          throw new BadRequestException('Algumas disciplinas informadas como pré-requisito não existem');
         }
 
         const graph = buildGraph(await links.find());
         if (wouldCreateCycle(graph, id, ids)) {
           throw new BadRequestException(
-            'These prerequisites would create a dependency cycle',
+            'Estes pré-requisitos criariam um ciclo de dependência',
           );
         }
       }
@@ -190,7 +190,7 @@ export class SubjectsService {
   private async assertUniqueCode(code: string, ignoreId?: number): Promise<void> {
     const same = await this.subjects.findOneBy({ code });
     if (same && same.id !== ignoreId) {
-      throw new ConflictException('A subject with this code already exists');
+      throw new ConflictException('Já existe uma disciplina com este código');
     }
   }
 

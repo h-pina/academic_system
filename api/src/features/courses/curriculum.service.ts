@@ -112,10 +112,10 @@ export class CurriculumService {
     this.assertSemester(course, dto.semester);
 
     if (!(await this.subjects.existsBy({ id: dto.subjectId }))) {
-      throw new BadRequestException('Subject not found');
+      throw new BadRequestException('Disciplina não encontrada');
     }
     if (await this.items.existsBy({ courseId, subjectId: dto.subjectId })) {
-      throw new ConflictException('This subject is already in the curriculum');
+      throw new ConflictException('Esta disciplina já está na matriz curricular');
     }
 
     await this.items.insert({
@@ -135,7 +135,7 @@ export class CurriculumService {
     const course = await this.requireCourse(courseId);
     const item = await this.items.findOneBy({ courseId, subjectId });
     if (!item) {
-      throw new NotFoundException('Subject is not in this curriculum');
+      throw new NotFoundException('A disciplina não está nesta matriz curricular');
     }
     if (dto.semester !== undefined) {
       this.assertSemester(course, dto.semester);
@@ -154,14 +154,14 @@ export class CurriculumService {
     await this.requireCourse(courseId);
     const result = await this.items.delete({ courseId, subjectId });
     if ((result.affected ?? 0) === 0) {
-      throw new NotFoundException('Subject is not in this curriculum');
+      throw new NotFoundException('A disciplina não está nesta matriz curricular');
     }
   }
 
   private assertSemester(course: Course, semester: number): void {
     if (semester > course.totalSemesters) {
       throw new BadRequestException(
-        `Semester must be between 1 and ${course.totalSemesters} for this course`,
+        `O semestre deve estar entre 1 e ${course.totalSemesters} para este curso`,
       );
     }
   }
@@ -169,7 +169,7 @@ export class CurriculumService {
   private async requireCourse(courseId: number): Promise<Course> {
     const course = await this.courses.findOneBy({ id: courseId });
     if (!course) {
-      throw new NotFoundException('Course not found');
+      throw new NotFoundException('Curso não encontrado');
     }
     return course;
   }

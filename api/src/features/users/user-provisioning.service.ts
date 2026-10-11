@@ -43,11 +43,11 @@ export class UserProvisioningService {
     const email = input.email?.trim();
     if (!name || !email) {
       throw new BadRequestException(
-        'name and email are required when the CPF is not registered yet',
+        'Nome e e-mail são obrigatórios quando o CPF ainda não está cadastrado',
       );
     }
     if (await users.existsBy({ email })) {
-      throw new ConflictException('A user with this e-mail is already registered');
+      throw new ConflictException('Já existe um usuário com este e-mail');
     }
 
     const user = await users.save(
@@ -84,7 +84,7 @@ export class UserProvisioningService {
 
     if (sequence.lastNumber >= MAX_SEQUENCE) {
       throw new ConflictException(
-        `No registration numbers left for year ${year}`,
+        `Não há mais matrículas disponíveis para o ano ${year}`,
       );
     }
     sequence.lastNumber += 1;

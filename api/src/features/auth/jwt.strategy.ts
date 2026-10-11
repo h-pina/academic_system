@@ -33,7 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       : null;
 
     if (!user || !user.active) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Sessão inválida ou expirada');
     }
 
     return {

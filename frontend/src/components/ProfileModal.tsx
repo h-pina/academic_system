@@ -57,7 +57,7 @@ export default function ProfileModal() {
     if (name.trim().length < 3) {
       showMessage({
         type: "WARNING",
-        messages: ["Name must be at least 3 characters long."],
+        messages: ["O nome deve ter pelo menos 3 caracteres."],
       });
       return;
     }
@@ -68,14 +68,14 @@ export default function ProfileModal() {
       if (newPassword.length < 8) {
         showMessage({
           type: "WARNING",
-          messages: ["The new password must be at least 8 characters long."],
+          messages: ["A nova senha deve ter pelo menos 8 caracteres."],
         });
         return;
       }
       if (newPassword !== confirmPassword) {
         showMessage({
           type: "ERROR",
-          messages: ["The passwords do not match."],
+          messages: ["As senhas não coincidem."],
         });
         return;
       }
@@ -93,7 +93,7 @@ export default function ProfileModal() {
     if (result.ok) {
       showMessage({
         type: "SUCCESS",
-        messages: ["Your data has been updated."],
+        messages: ["Seus dados foram atualizados."],
       });
       setProfileOpen(false);
     }
@@ -129,11 +129,11 @@ export default function ProfileModal() {
   return (
     <div className="modal-backdrop">
       <div className="modal-card max-w-lg">
-        <h2 className="modal-title">My data</h2>
+        <h2 className="modal-title">Meus dados</h2>
 
         <div className="mb-6">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Account details
+            Dados da conta
           </h3>
 
           <div className="mb-4">
@@ -148,7 +148,7 @@ export default function ProfileModal() {
           </div>
 
           <div className="mb-4">
-            <label className="field-label">Name</label>
+            <label className="field-label">Nome</label>
             <input
               type="text"
               value={name}
@@ -158,7 +158,7 @@ export default function ProfileModal() {
           </div>
 
           <div>
-            <label className="field-label">Email</label>
+            <label className="field-label">E-mail</label>
             <input
               type="email"
               value={email}
@@ -178,26 +178,26 @@ export default function ProfileModal() {
               onClick={() => setChangePassword(true)}
               className="text-sm font-medium text-brand-600 hover:underline"
             >
-              Change password
+              Alterar senha
             </button>
           ) : (
             <>
               {renderPasswordField(
-                "Current password",
+                "Senha atual",
                 currentPassword,
                 setCurrentPassword,
                 showCurrent,
                 setShowCurrent,
               )}
               {renderPasswordField(
-                "New password",
+                "Nova senha",
                 newPassword,
                 setNewPassword,
                 showNew,
                 setShowNew,
               )}
               {renderPasswordField(
-                "Confirm new password",
+                "Confirmar nova senha",
                 confirmPassword,
                 setConfirmPassword,
                 showConfirm,
@@ -213,7 +213,7 @@ export default function ProfileModal() {
                 }}
                 className="mt-1 text-sm text-slate-500 hover:underline"
               >
-                Cancel password change
+                Cancelar alteração de senha
               </button>
             </>
           )}
@@ -221,12 +221,12 @@ export default function ProfileModal() {
 
         <div className="mt-4 flex justify-end gap-3 border-t border-slate-200 pt-4">
           <Button
-            label="Cancel"
+            label="Cancelar"
             variant="cancel"
             onClick={() => setProfileOpen(false)}
           />
           <Button
-            label="Save changes"
+            label="Salvar alterações"
             variant="save"
             loading={saving}
             onClick={handleSubmit}

@@ -50,7 +50,7 @@ export class UsersService {
   async getEmail(cpf: string): Promise<string> {
     const email = await this.usersRepository.findEmailByCpf(sanitizeCpf(cpf));
     if (!email) {
-      throw new NotFoundException('User email not found');
+      throw new NotFoundException('E-mail do usuário não encontrado');
     }
     return email;
   }
@@ -59,7 +59,7 @@ export class UsersService {
     const cpf = sanitizeCpf(dto.cpf);
 
     if (await this.usersRepository.exists(cpf)) {
-      throw new ConflictException('A user with this CPF is already registered');
+      throw new ConflictException('Já existe um usuário com este CPF');
     }
 
     const passwordHash = dto.password
@@ -83,7 +83,7 @@ export class UsersService {
   async updateOwnProfile(cpf: string, dto: UpdateOwnProfileDto): Promise<void> {
     const user = await this.usersRepository.findByCpf(cpf);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     const passwordHash = await this.resolvePasswordChange(user, dto);
@@ -110,7 +110,7 @@ export class UsersService {
     }
 
     if (!user.passwordHash) {
-      throw new BadRequestException('User does not have a password set yet');
+      throw new BadRequestException('O usuário ainda não definiu uma senha');
     }
 
     const currentPasswordMatches = await bcrypt.compare(
@@ -118,7 +118,7 @@ export class UsersService {
       user.passwordHash,
     );
     if (!currentPasswordMatches) {
-      throw new BadRequestException('Current password is incorrect');
+      throw new BadRequestException('A senha atual está incorreta');
     }
 
     return bcrypt.hash(dto.newPassword, this.saltRounds);
@@ -126,7 +126,7 @@ export class UsersService {
 
   private async ensureExists(cpf: string): Promise<void> {
     if (!(await this.usersRepository.exists(cpf))) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
   }
 }

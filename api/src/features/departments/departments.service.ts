@@ -67,7 +67,7 @@ export class DepartmentsService {
     ]);
     if (courses > 0 || teachers > 0) {
       throw new ConflictException(
-        `Department still has ${courses} course(s) and ${teachers} teacher(s); move or remove them first`,
+        `O departamento ainda tem ${courses} curso(s) e ${teachers} professor(es); mova-os ou remova-os antes`,
       );
     }
     await this.departments.delete({ id });
@@ -76,7 +76,7 @@ export class DepartmentsService {
   private async require(id: number): Promise<Department> {
     const department = await this.departments.findOneBy({ id });
     if (!department) {
-      throw new NotFoundException('Department not found');
+      throw new NotFoundException('Departamento não encontrado');
     }
     return department;
   }
@@ -88,11 +88,11 @@ export class DepartmentsService {
   ): Promise<void> {
     const sameName = await this.departments.findOneBy({ name });
     if (sameName && sameName.id !== ignoreId) {
-      throw new ConflictException('A department with this name already exists');
+      throw new ConflictException('Já existe um departamento com este nome');
     }
     const sameCode = await this.departments.findOneBy({ code });
     if (sameCode && sameCode.id !== ignoreId) {
-      throw new ConflictException('A department with this code already exists');
+      throw new ConflictException('Já existe um departamento com este código');
     }
   }
 

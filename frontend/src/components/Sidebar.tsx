@@ -36,7 +36,7 @@ export default function Sidebar({ items, onNavigate }: SidebarProps) {
   return (
     <nav className="flex h-full flex-col gap-1 overflow-y-auto bg-surface p-3">
       <p className="px-3 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        Modules
+        Módulos
       </p>
 
       {items.map((item) => {
@@ -68,7 +68,7 @@ export default function Sidebar({ items, onNavigate }: SidebarProps) {
 
       {items.length === 0 && (
         <p className="px-3 py-4 text-sm text-slate-500">
-          Your role has no modules assigned.
+          Seu perfil não tem módulos disponíveis.
         </p>
       )}
     </nav>

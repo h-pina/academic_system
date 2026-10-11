@@ -78,7 +78,7 @@ export class CoursesService {
       relations: { department: true },
     });
     if (!course) {
-      throw new NotFoundException('Course not found');
+      throw new NotFoundException('Curso não encontrado');
     }
     return this.toView(course);
   }
@@ -104,7 +104,7 @@ export class CoursesService {
   async update(id: number, dto: UpdateCourseDto): Promise<CourseView> {
     const current = await this.courses.findOneBy({ id });
     if (!current) {
-      throw new NotFoundException('Course not found');
+      throw new NotFoundException('Curso não encontrado');
     }
 
     if (dto.departmentId !== undefined) {
@@ -124,7 +124,7 @@ export class CoursesService {
         .getCount();
       if (beyond > 0) {
         throw new ConflictException(
-          `${beyond} curriculum item(s) are placed after semester ${dto.totalSemesters}; move them first`,
+          `${beyond} item(ns) da matriz estão após o semestre ${dto.totalSemesters}; mova-os antes`,
         );
       }
     }
@@ -144,12 +144,12 @@ export class CoursesService {
   /** A course that still has students cannot be removed: inactivate it. */
   async remove(id: number): Promise<void> {
     if (!(await this.courses.existsBy({ id }))) {
-      throw new NotFoundException('Course not found');
+      throw new NotFoundException('Curso não encontrado');
     }
     const students = await this.students.countBy({ courseId: id });
     if (students > 0) {
       throw new ConflictException(
-        `Course still has ${students} student(s); inactivate it instead`,
+        `O curso ainda tem ${students} aluno(s); inative-o em vez de excluir`,
       );
     }
     await this.courses.delete({ id });
@@ -157,14 +157,14 @@ export class CoursesService {
 
   private async requireDepartment(departmentId: number): Promise<void> {
     if (!(await this.departments.existsBy({ id: departmentId }))) {
-      throw new BadRequestException('Department not found');
+      throw new BadRequestException('Departamento não encontrado');
     }
   }
 
   private async assertUniqueCode(code: string, ignoreId?: number): Promise<void> {
     const same = await this.courses.findOneBy({ code });
     if (same && same.id !== ignoreId) {
-      throw new ConflictException('A course with this code already exists');
+      throw new ConflictException('Já existe um curso com este código');
     }
   }
 

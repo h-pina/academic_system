@@ -319,7 +319,7 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
         .delete(`/subjects/${subject.id}`)
         .set(admin)
         .expect(409);
-      expect(res.body.message).toMatch(/curriculum/);
+      expect(res.body.message).toMatch(/matriz/);
 
       await request(server())
         .delete(`/courses/${courseId}/curriculum/${subject.id}`)
@@ -362,7 +362,7 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
     it('rejects a subject being its own prerequisite (400)', async () => {
       const subject = await newSubject();
       const res = await setPrerequisites(subject.id, [subject.id]).expect(400);
-      expect(res.body.message).toMatch(/own prerequisite/);
+      expect(res.body.message).toMatch(/pré-requisito dela mesma/);
     });
 
     it('rejects a direct cycle (400) and leaves the data unchanged', async () => {
@@ -371,7 +371,7 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
       await setPrerequisites(b.id, [a.id]).expect(200);
 
       const res = await setPrerequisites(a.id, [b.id]).expect(400);
-      expect(res.body.message).toMatch(/cycle/);
+      expect(res.body.message).toMatch(/ciclo/);
 
       const stored = await ds
         .getRepository(SubjectPrerequisite)
@@ -424,7 +424,7 @@ describe('Subjects, curriculum and prerequisites API (e2e)', () => {
         .delete(`/subjects/${base.id}`)
         .set(admin)
         .expect(409);
-      expect(res.body.message).toMatch(/prerequisite/);
+      expect(res.body.message).toMatch(/pré-requisito/);
 
       // Deleting the dependent frees the base.
       await request(server()).delete(`/subjects/${dependent.id}`).set(admin).expect(204);

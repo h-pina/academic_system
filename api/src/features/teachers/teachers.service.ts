@@ -31,7 +31,7 @@ export class TeachersService {
   async get(userId: number): Promise<TeacherView> {
     const teacher = await this.repository.findView(userId);
     if (!teacher) {
-      throw new NotFoundException('Teacher not found');
+      throw new NotFoundException('Professor não encontrado');
     }
     return teacher;
   }
@@ -49,7 +49,7 @@ export class TeachersService {
 
       const teachers = manager.getRepository(Teacher);
       if (await teachers.existsBy({ userId: user.id })) {
-        throw new ConflictException('This person is already a teacher');
+        throw new ConflictException('Esta pessoa já possui vínculo de professor');
       }
 
       await teachers.insert({
@@ -68,7 +68,7 @@ export class TeachersService {
     await this.transactions.run(async (manager) => {
       const teachers = manager.getRepository(Teacher);
       if (!(await teachers.existsBy({ userId }))) {
-        throw new NotFoundException('Teacher not found');
+        throw new NotFoundException('Professor não encontrado');
       }
       if (dto.departmentId !== undefined) {
         await this.requireDepartment(manager, dto.departmentId);
@@ -89,7 +89,7 @@ export class TeachersService {
   /** Removes only the teacher profile; the user stays. Prefer inactivating. */
   async remove(userId: number): Promise<void> {
     if (!(await this.repository.delete(userId))) {
-      throw new NotFoundException('Teacher not found');
+      throw new NotFoundException('Professor não encontrado');
     }
   }
 
@@ -98,7 +98,7 @@ export class TeachersService {
     departmentId: number,
   ): Promise<void> {
     if (!(await manager.getRepository(Department).existsBy({ id: departmentId }))) {
-      throw new BadRequestException('Department not found');
+      throw new BadRequestException('Departamento não encontrado');
     }
   }
 }

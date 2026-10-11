@@ -44,7 +44,7 @@ export class StudentsController {
       'teacher',
     ]);
     if (!seesEveryone && user.userId !== id) {
-      throw new ForbiddenException('Students can only see their own record');
+      throw new ForbiddenException('Alunos só podem ver o próprio cadastro');
     }
     return this.studentsService.get(id);
   }

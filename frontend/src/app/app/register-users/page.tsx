@@ -74,7 +74,7 @@ export default function RegisterUsersPage() {
     if (result.ok) {
       showMessage({
         type: "SUCCESS",
-        messages: [isEditing ? "User updated." : "User created."],
+        messages: [isEditing ? "Usuário atualizado." : "Usuário cadastrado."],
       });
       setEditingUser(null);
       loadUsers();
@@ -88,7 +88,7 @@ export default function RegisterUsersPage() {
 
     const result = await request(`/users/${target.cpf}`, { method: "DELETE" });
     if (result.ok) {
-      showMessage({ type: "SUCCESS", messages: ["User deleted."] });
+      showMessage({ type: "SUCCESS", messages: ["Usuário excluído."] });
       loadUsers();
     }
   };
@@ -97,9 +97,9 @@ export default function RegisterUsersPage() {
     <div className="p-6">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          {users.length} user{users.length === 1 ? "" : "s"}
+          {users.length} usuário{users.length === 1 ? "" : "s"}
         </p>
-        <Button label="Add user" variant="add" onClick={handleNew} />
+        <Button label="Novo usuário" variant="add" onClick={handleNew} />
       </div>
 
       <div className="card overflow-hidden">
@@ -108,10 +108,10 @@ export default function RegisterUsersPage() {
             <thead>
               <tr>
                 <th>CPF</th>
-                <th>Name</th>
-                <th>Email</th>
+                <th>Nome</th>
+                <th>E-mail</th>
                 <th>Perfis</th>
-                <th className="w-32 text-center">Actions</th>
+                <th className="w-32 text-center">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -143,12 +143,12 @@ export default function RegisterUsersPage() {
                     <div className="flex items-center justify-center gap-1">
                       <Button
                         variant="edit"
-                        hint="Edit this user"
+                        hint="Editar este usuário"
                         onClick={() => handleEdit(user)}
                       />
                       <Button
                         variant="delete"
-                        hint="Delete this user"
+                        hint="Excluir este usuário"
                         onClick={() => setUserToDelete(user)}
                       />
                     </div>
@@ -161,7 +161,7 @@ export default function RegisterUsersPage() {
                     colSpan={5}
                     className="px-4 py-10 text-center text-sm text-slate-400"
                   >
-                    No users registered yet.
+                    Nenhum usuário cadastrado.
                   </td>
                 </tr>
               )}
@@ -182,8 +182,8 @@ export default function RegisterUsersPage() {
 
       <ConfirmModal
         open={userToDelete !== null}
-        title="Confirm deletion"
-        message={`Are you sure you want to delete the user "${userToDelete?.name}"? This action cannot be undone.`}
+        title="Confirmar exclusão"
+        message={`Tem certeza de que deseja excluir o usuário "${userToDelete?.name}"? Esta ação não pode ser desfeita.`}
         onConfirm={handleDeleteConfirm}
         onClose={() => setUserToDelete(null)}
       />

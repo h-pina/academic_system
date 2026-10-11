@@ -54,7 +54,7 @@ export default function Footer() {
         <button
           onClick={hideMessage}
           className="shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100"
-          aria-label="Dismiss"
+          aria-label="Fechar"
         >
           <X className="h-4 w-4" />
         </button>

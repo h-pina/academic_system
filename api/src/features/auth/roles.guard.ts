@@ -35,7 +35,7 @@ export class RolesGuard implements CanActivate {
     const user: AuthUser | undefined = context.switchToHttp().getRequest().user;
     if (!user || user.roles.length === 0) {
       throw new ForbiddenException(
-        'Your account has no profile linked yet. Contact the secretary.',
+        'Seu cadastro ainda não possui vínculo. Procure a secretaria.',
       );
     }
 
@@ -43,7 +43,7 @@ export class RolesGuard implements CanActivate {
       this.reflector.getAllAndOverride<RoleName[]>(ROLES_KEY, targets) ?? [];
     if (required.length > 0 && !hasAnyRole(user.roles, required)) {
       throw new ForbiddenException(
-        'You do not have permission to access this resource.',
+        'Você não tem permissão para acessar este recurso.',
       );
     }
     return true;

@@ -29,7 +29,7 @@ export class StaffService {
   async get(userId: number): Promise<StaffView> {
     const staff = await this.repository.findView(userId);
     if (!staff) {
-      throw new NotFoundException('Staff member not found');
+      throw new NotFoundException('Funcionário não encontrado');
     }
     return staff;
   }
@@ -40,7 +40,7 @@ export class StaffService {
 
       const staff = manager.getRepository(Staff);
       if (await staff.existsBy({ userId: user.id })) {
-        throw new ConflictException('This person is already a staff member');
+        throw new ConflictException('Esta pessoa já possui vínculo administrativo');
       }
 
       await staff.insert({ userId: user.id, role: dto.role, status: 'active' });
@@ -67,7 +67,7 @@ export class StaffService {
         dto.status !== undefined && dto.status !== current.status;
       if (userId === actorUserId && (roleChanges || statusChanges)) {
         throw new ConflictException(
-          'You cannot change your own role or status',
+          'Você não pode alterar o seu próprio papel ou situação',
         );
       }
 
@@ -97,7 +97,7 @@ export class StaffService {
       const current = await this.requireStaff(manager, userId);
 
       if (userId === actorUserId) {
-        throw new ConflictException('You cannot remove your own staff profile');
+        throw new ConflictException('Você não pode remover o seu próprio vínculo administrativo');
       }
       if (current.role === 'admin' && current.status === 'active') {
         await this.requireAnotherActiveAdmin(manager, userId);
@@ -112,7 +112,7 @@ export class StaffService {
   ): Promise<Staff> {
     const staff = await manager.getRepository(Staff).findOneBy({ userId });
     if (!staff) {
-      throw new NotFoundException('Staff member not found');
+      throw new NotFoundException('Funcionário não encontrado');
     }
     return staff;
   }
@@ -131,7 +131,7 @@ export class StaffService {
 
     if (others === 0) {
       throw new ConflictException(
-        'There must always be at least one active administrator',
+        'Deve existir sempre pelo menos um administrador ativo',
       );
     }
   }

@@ -1,4 +1,9 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
+import { translateValidationErrors } from './common/validation/validation-messages';
 
 /**
  * Application-level configuration shared by the real bootstrap (`main.ts`)
@@ -12,6 +17,9 @@ export function configureApp(app: INestApplication): void {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      // Validation errors reach the UI, so they are returned in Portuguese.
+      exceptionFactory: (errors) =>
+        new BadRequestException(translateValidationErrors(errors)),
     }),
   );
 }
