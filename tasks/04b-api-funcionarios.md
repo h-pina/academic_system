@@ -33,15 +33,15 @@ Permitir que o administrador cadastre e gerencie os funcionários administrativo
 
 ## Checklist
 
-- [ ] Criar módulo `staff` (entity, DTOs, repository, service, controller, module)
-- [ ] `POST` em transação: reaproveita o `users` se o CPF existir; senão cria `users` sem senha e depois `staff`
-- [ ] Rejeitar (409) se o usuário já tem linha em `staff`
-- [ ] **Não permitir** remover, inativar ou rebaixar o último `admin` ativo (409)
-- [ ] Impedir que o administrador altere o próprio papel ou o próprio status (evitar auto-bloqueio)
-- [ ] Implementar `GET /users/orphans` (consulta com `LEFT JOIN` nas três tabelas de extensão)
-- [ ] Decidir se `POST /users` (sem vínculo) existe; se existir, restrito a `admin` e documentado
-- [ ] Aplicar `@Roles('admin')` em todas as rotas
-- [ ] Adicionar rotas ao Postman
+- [x] Criar módulo `staff` (entity, DTOs, repository, service, controller, module)
+- [x] `POST` em transação: reaproveita o `users` se o CPF existir; senão cria `users` sem senha e depois `staff`
+- [x] Rejeitar (409) se o usuário já tem linha em `staff`
+- [x] **Não permitir** remover, inativar ou rebaixar o último `admin` ativo (409)
+- [x] Impedir que o administrador altere o próprio papel ou o próprio status (evitar auto-bloqueio)
+- [x] Implementar `GET /users/orphans` (consulta com `LEFT JOIN` nas três tabelas de extensão)
+- [x] `POST /users` (sem vínculo) existe desde a tarefa 02, restrito a `admin`
+- [x] Aplicar `@Roles('admin')` em todas as rotas
+- [x] Adicionar rotas ao Postman
 
 ## Critérios de aceite
 
@@ -50,3 +50,10 @@ Permitir que o administrador cadastre e gerencie os funcionários administrativo
 - `GET /users/orphans` lista exatamente os usuários sem nenhum perfil.
 - Falha na criação de `staff` não deixa `users` órfão (transação revertida).
 - Testes de service cobrindo criação, reaproveitamento de usuário, regra do último admin e duplicidade.
+
+## Decisões tomadas na implementação
+
+- O vínculo administrativo é `staff` (um papel por pessoa), gerenciado só por `admin`.
+- Pela API, o ator que altera outro admin continua sendo admin ativo, então a regra do "último admin" só dispara em chamadas diretas ao serviço (defesa em profundidade, coberta por teste). A corrida real (dois admins se rebaixando) é resolvida pelo `TransactionService` e pelo cálculo de perfis a cada requisição: o perdedor recebe 403 imediatamente.
+- Staff com `status = 'inactive'` não concede nenhum perfil.
+- `GET /users/orphans` retorna usuários sem `staff`, `teachers` ou `students` (inclui vínculos inativos, pois a linha ainda existe).

@@ -16,7 +16,9 @@
     { "key": "newPassword", "value": "newpassword8", "type": "string" },
     { "key": "targetCpf", "value": "32165498791", "type": "string" },
     { "key": "studentId", "value": "5", "type": "string" },
-    { "key": "studentCpf", "value": "39053344705", "type": "string" }
+    { "key": "studentCpf", "value": "39053344705", "type": "string" },
+    { "key": "staffId", "value": "6", "type": "string" },
+    { "key": "staffCpf", "value": "86288366757", "type": "string" }
   ],
   "item": [
     {
@@ -330,6 +332,145 @@
               ]
             },
             "description": "JWT (admin). Removes only the student profile (204); the user stays. Prefer setting `status`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "List staff",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/staff?page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "staff"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "JWT (admin). Paginated. Filters: `role` (admin|secretary), `status` (active|inactive), `q` (name or CPF), `page`, `pageSize`."
+          }
+        },
+        {
+          "name": "Get staff member",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/staff/{{staffId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "staff",
+                "{{staffId}}"
+              ]
+            },
+            "description": "JWT (admin). `:id` is the user id."
+          }
+        },
+        {
+          "name": "Create staff member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/staff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "staff"
+              ]
+            },
+            "description": "JWT (admin). Creates the user (without password) when the CPF is new, reuses it otherwise, and adds the administrative profile in one transaction. `name`/`email` are required only for a new CPF. 409 if already staff.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cpf\": \"{{staffCpf}}\",\n  \"name\": \"Margaret Hamilton\",\n  \"email\": \"margaret@example.com\",\n  \"role\": \"secretary\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update staff member",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/staff/{{staffId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "staff",
+                "{{staffId}}"
+              ]
+            },
+            "description": "JWT (admin). `role` and/or `status`. You cannot change your own role/status, and the last active admin is protected (409).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"inactive\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete staff profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/staff/{{staffId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "staff",
+                "{{staffId}}"
+              ]
+            },
+            "description": "JWT (admin). Removes only the staff profile (204); the user stays. 409 for yourself or the last active admin."
+          }
+        },
+        {
+          "name": "List users without profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/orphans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "orphans"
+              ]
+            },
+            "description": "JWT (admin). Users with no staff, teacher or student profile."
           }
         }
       ]

@@ -38,6 +38,11 @@ export class UsersService {
     }));
   }
 
+  async findWithoutProfile(): Promise<PublicUser[]> {
+    const users = await this.usersRepository.findWithoutProfile();
+    return users.map(toPublicUser);
+  }
+
   async exists(cpf: string): Promise<boolean> {
     return this.usersRepository.exists(sanitizeCpf(cpf));
   }

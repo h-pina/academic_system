@@ -26,6 +26,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  /** Users with no staff, teacher or student profile ("without link"). */
+  @Auth('admin')
+  @Get('orphans')
+  findWithoutProfile() {
+    return this.usersService.findWithoutProfile();
+  }
+
   @Auth('admin', 'secretary')
   @Get(':cpf/exists')
   async exists(@Param('cpf') cpf: string) {
