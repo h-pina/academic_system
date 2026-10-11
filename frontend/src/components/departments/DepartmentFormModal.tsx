@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Button from "@/components/Button";
+import { Field } from "@/components/ui/Field";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { validateDepartmentDraft } from "@/lib/validation";
 import type { Department } from "@/types";
@@ -23,7 +25,7 @@ export default function DepartmentFormModal({
   const [name, setName] = useState(department?.name ?? "");
   const [code, setCode] = useState(department?.code ?? "");
 
-  const handleSave = () => {
+  const handleSubmit = () => {
     const errors = validateDepartmentDraft({ name, code });
     if (errors.length > 0) {
       showMessage({ type: "WARNING", messages: errors });
@@ -33,46 +35,31 @@ export default function DepartmentFormModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-md">
-        <h3 className="modal-title">
-          {department ? "Editar departamento" : "Novo departamento"}
-        </h3>
+    <FormModal
+      title={department ? "Editar departamento" : "Novo departamento"}
+      submitLabel={department ? "Salvar alterações" : "Cadastrar"}
+      size="sm"
+      loading={loading}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Field label="Nome" required>
+        {(control) => (
+          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+        )}
+      </Field>
 
-        <div className="space-y-4">
-          <label className="block">
-            <span className="field-label">Nome *</span>
-            <input
-              type="text"
-              className="field-input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">Código *</span>
-            <input
-              type="text"
-              maxLength={20}
-              className="field-input uppercase"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-            />
-            <span className="field-hint">Ex.: DCC. Deve ser único.</span>
-          </label>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancelar" variant="cancel" onClick={onClose} />
-          <Button
-            label={department ? "Salvar alterações" : "Cadastrar"}
-            variant="save"
-            loading={loading}
-            onClick={handleSave}
+      <Field label="Código" required hint="Ex.: DCC. Deve ser único.">
+        {(control) => (
+          <Input
+            {...control}
+            maxLength={20}
+            className="uppercase"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
           />
-        </div>
-      </div>
-    </div>
+        )}
+      </Field>
+    </FormModal>
   );
 }

@@ -83,7 +83,7 @@ function CourseSubjects({ courseId, courseName }: { courseId: number; courseName
         />
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-surface shadow-card overflow-hidden">
         <DataTable
           caption="Disciplinas do seu curso"
           columns={COLUMNS}

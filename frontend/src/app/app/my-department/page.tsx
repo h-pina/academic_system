@@ -59,7 +59,7 @@ export default function MyDepartmentPage() {
     return (
       <div className="p-6">
         <PageHeading title="Meu departamento" />
-        <div className="card">
+        <div className="rounded-xl border border-slate-200 bg-surface shadow-card">
           <EmptyState
             title={failed ? "Não foi possível carregar seu departamento" : "Departamento indisponível"}
             description="Tente novamente em instantes. Se o problema continuar, procure a secretaria."
@@ -87,7 +87,7 @@ export default function MyDepartmentPage() {
       <section>
         <h2 className="mb-3 text-base">Cursos</h2>
         {courses.length === 0 ? (
-          <div className="card">
+          <div className="rounded-xl border border-slate-200 bg-surface shadow-card">
             <EmptyState title="Este departamento ainda não tem cursos" />
           </div>
         ) : (
@@ -96,7 +96,7 @@ export default function MyDepartmentPage() {
               <li key={course.id}>
                 <Link
                   href={`/app/courses/${course.id}/curriculum`}
-                  className="card flex items-center justify-between px-4 py-3 text-sm no-underline hover:shadow-panel"
+                  className="rounded-xl border border-slate-200 bg-surface shadow-card flex items-center justify-between px-4 py-3 text-sm no-underline hover:shadow-panel"
                 >
                   <span className="font-medium text-slate-900">{course.name}</span>
                   <span className="text-slate-500">
@@ -111,7 +111,7 @@ export default function MyDepartmentPage() {
 
       <section>
         <h2 className="mb-3 text-base">Colegas</h2>
-        <div className="card overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-surface shadow-card overflow-hidden">
           <Colleagues departmentId={department.id} />
         </div>
       </section>

@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 /** Shown when the dashboard has no student section to build a screen from. */
 export default function NoStudentCourse({ failed }: { failed: boolean }) {
   return (
-    <div className="card">
+    <div className="rounded-xl border border-slate-200 bg-surface shadow-card">
       <EmptyState
         title={failed ? "Não foi possível carregar seu curso" : "Seu curso não está disponível"}
         description={

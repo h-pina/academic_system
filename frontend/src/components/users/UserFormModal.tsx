@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { useState } from "react";
+import { Field } from "@/components/ui/Field";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
 import { formatCpf } from "@/lib/format";
+import { MIN_NAME_LENGTH, MIN_PASSWORD_LENGTH, isValidEmail } from "@/lib/validation";
 import type { User } from "@/types";
 
 export interface UserDraft {
@@ -16,8 +19,8 @@ export interface UserDraft {
 }
 
 interface UserFormModalProps {
-  user: User | UserDraft;
-  editing: boolean;
+  /** `null` creates a user (without a profile); otherwise the user being edited. */
+  user: User | null;
   loading: boolean;
   onClose: () => void;
   onSave: (draft: UserDraft) => void;
@@ -25,158 +28,121 @@ interface UserFormModalProps {
 
 export default function UserFormModal({
   user,
-  editing,
   loading,
   onClose,
   onSave,
 }: UserFormModalProps) {
+  const editing = user !== null;
   const { showMessage } = useMessage();
   const { request } = useApi();
 
-  const [draft, setDraft] = useState<UserDraft>({
-    cpf: user.cpf,
-    name: user.name,
-    email: user.email,
-    password: "",
-  });
-
-  useEffect(() => {
-    setDraft({
-      cpf: user.cpf,
-      name: user.name,
-      email: user.email,
-      password: "",
-    });
-  }, [user]);
+  const [cpf, setCpf] = useState(user?.cpf ?? "");
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [password, setPassword] = useState("");
+  const [cpfTaken, setCpfTaken] = useState(false);
 
   const checkCpfTaken = async () => {
-    const cleanCpf = sanitizeCpf(draft.cpf);
-    if (cleanCpf.length !== 11) return;
+    const digits = sanitizeCpf(cpf);
+    if (editing || digits.length !== 11) return;
 
-    const result = await request<{ exists: boolean }>(
-      `/users/${cleanCpf}/exists`,
-    );
-    if (result.ok && result.data.exists) {
-      showMessage({
-        type: "WARNING",
-        messages: ["Já existe um usuário com este CPF."],
-      });
-    }
+    const result = await request<{ exists: boolean }>(`/users/${digits}/exists`, {
+      silent: true,
+    });
+    setCpfTaken(result.ok && result.data.exists);
   };
 
-  const handleSave = () => {
-    const cleanCpf = sanitizeCpf(draft.cpf);
+  const handleSubmit = () => {
+    const errors: string[] = [];
+    if (!editing && !isValidCpf(sanitizeCpf(cpf))) errors.push("Informe um CPF válido.");
+    if (name.trim().length < MIN_NAME_LENGTH) {
+      errors.push(`O nome deve ter pelo menos ${MIN_NAME_LENGTH} caracteres.`);
+    }
+    if (!isValidEmail(email)) errors.push("Informe um e-mail válido.");
+    if (!editing && password && password.length < MIN_PASSWORD_LENGTH) {
+      errors.push(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+    }
 
-    if (!editing && !isValidCpf(cleanCpf)) {
-      showMessage({
-        type: "WARNING",
-        messages: ["Informe um CPF válido."],
-      });
-      return;
-    }
-    if (draft.name.trim().length < 3) {
-      showMessage({
-        type: "WARNING",
-        messages: ["O nome deve ter pelo menos 3 caracteres."],
-      });
-      return;
-    }
-    if (!editing && draft.password && draft.password.length < 8) {
-      showMessage({
-        type: "WARNING",
-        messages: ["A senha deve ter pelo menos 8 caracteres."],
-      });
+    if (errors.length > 0) {
+      showMessage({ type: "WARNING", messages: errors });
       return;
     }
 
     onSave({
-      cpf: cleanCpf,
-      name: draft.name.trim(),
-      email: draft.email.trim(),
-      password: draft.password ? draft.password : undefined,
+      cpf: sanitizeCpf(cpf),
+      name: name.trim(),
+      email: email.trim(),
+      password: password || undefined,
     });
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-lg">
-        <h3 className="modal-title">{editing ? "Editar usuário" : "Novo usuário"}</h3>
-
-        <div className="space-y-4">
-          <label className="block">
-            <span className="field-label">CPF *</span>
-            <input
-              type="text"
-              maxLength={14}
-              className="field-input"
-              value={editing ? formatCpf(draft.cpf) : draft.cpf}
-              onChange={(event) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  cpf: event.target.value.replace(/\D/g, ""),
-                }))
-              }
-              onBlur={editing ? undefined : checkCpfTaken}
-              readOnly={editing}
-              disabled={editing}
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">Nome *</span>
-            <input
-              type="text"
-              className="field-input"
-              value={draft.name}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, name: event.target.value }))
-              }
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">E-mail *</span>
-            <input
-              type="email"
-              className="field-input"
-              value={draft.email}
-              onChange={(event) =>
-                setDraft((prev) => ({ ...prev, email: event.target.value }))
-              }
-            />
-          </label>
-
-          {!editing && (
-            <label className="block">
-              <span className="field-label">Senha</span>
-              <input
-                type="password"
-                className="field-input"
-                value={draft.password ?? ""}
-                onChange={(event) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    password: event.target.value,
-                  }))
-                }
-              />
-              <span className="field-hint">
-                Deixe em branco para que a pessoa defina a senha no primeiro acesso.
-              </span>
-            </label>
-          )}
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancelar" variant="cancel" onClick={onClose} />
-          <Button
-            label={editing ? "Salvar alterações" : "Cadastrar"}
-            variant="save"
-            loading={loading}
-            onClick={handleSave}
+    <FormModal
+      title={editing ? "Editar usuário" : "Novo usuário"}
+      description={
+        editing
+          ? undefined
+          : "O usuário é criado sem vínculo. O perfil (aluno, professor ou funcionário) é atribuído no cadastro correspondente."
+      }
+      submitLabel={editing ? "Salvar alterações" : "Cadastrar"}
+      loading={loading}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Field
+        label="CPF"
+        required={!editing}
+        error={cpfTaken ? "Já existe um usuário com este CPF." : undefined}
+      >
+        {(control) => (
+          <Input
+            {...control}
+            inputMode="numeric"
+            maxLength={14}
+            value={formatCpf(cpf)}
+            disabled={editing}
+            onChange={(event) => {
+              setCpf(event.target.value.replace(/\D/g, ""));
+              setCpfTaken(false);
+            }}
+            onBlur={checkCpfTaken}
           />
-        </div>
-      </div>
-    </div>
+        )}
+      </Field>
+
+      <Field label="Nome" required>
+        {(control) => (
+          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+        )}
+      </Field>
+
+      <Field label="E-mail" required>
+        {(control) => (
+          <Input
+            {...control}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        )}
+      </Field>
+
+      {!editing && (
+        <Field
+          label="Senha"
+          hint="Deixe em branco para que a pessoa defina a senha no primeiro acesso."
+        >
+          {(control) => (
+            <Input
+              {...control}
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          )}
+        </Field>
+      )}
+    </FormModal>
   );
 }

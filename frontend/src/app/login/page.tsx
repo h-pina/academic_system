@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import BrandMark from "@/components/BrandMark";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
@@ -118,30 +122,31 @@ export default function LoginPage() {
     setConfirmPassword("");
   };
 
+  const showPasswordLabel = showPassword ? "Ocultar senha" : "Mostrar senha";
+
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-canvas p-6">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-sm">
+
+      <main className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <BrandMark size={52} className="mb-3" />
-          <h1 className="text-base font-semibold text-slate-900">
-            Sistema Acadêmico
-          </h1>
+          <BrandMark size={56} className="mb-3" />
+          <h1 className="text-xl font-extrabold text-slate-900">Sistema Acadêmico</h1>
           <p className="text-sm text-slate-500">Entre para continuar</p>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <Card className="p-6 sm:p-8">
           <div className="relative mb-5 flex items-center justify-center">
             {identified && (
-              <button
-                type="button"
+              <IconButton
+                label="Voltar e trocar o CPF ou a matrícula"
                 onClick={goBackToCpf}
-                className="absolute left-0 flex items-center text-slate-500 transition hover:text-brand-600"
+                className="absolute left-0"
               >
-                <ArrowLeft size={20} />
-              </button>
+                <ArrowLeft className="h-5 w-5" />
+              </IconButton>
             )}
             <h2 className="flex-1 text-center text-sm font-semibold uppercase tracking-wide text-slate-500">
               {identified ? "Senha" : "Identifique-se"}
@@ -149,108 +154,96 @@ export default function LoginPage() {
           </div>
 
           {!identified ? (
-            <form className="flex flex-col gap-4" onSubmit={handleCheckCpf}>
-              <div>
-                <label htmlFor="identifier" className="field-label">
-                  CPF ou matrícula
-                </label>
-                <input
-                  id="identifier"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Somente números"
-                  value={identifierInput}
-                  maxLength={14}
-                  onChange={(event) =>
-                    setIdentifierInput(event.target.value)
-                  }
-                  className="field-input"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-              >
+            <form className="flex flex-col gap-4" onSubmit={handleCheckCpf} noValidate>
+              <Field label="CPF ou matrícula" required>
+                {(control) => (
+                  <Input
+                    {...control}
+                    autoFocus
+                    inputMode="numeric"
+                    autoComplete="username"
+                    placeholder="Somente números"
+                    maxLength={14}
+                    value={identifierInput}
+                    onChange={(event) => setIdentifierInput(event.target.value)}
+                  />
+                )}
+              </Field>
+              <Button type="submit" size="lg">
                 Continuar
-              </button>
+              </Button>
             </form>
           ) : (
-            <form className="flex flex-col gap-4" onSubmit={handleSignIn}>
+            <form className="flex flex-col gap-4" onSubmit={handleSignIn} noValidate>
               <div className="rounded-lg bg-slate-50 px-4 py-3 text-center">
                 <span className="text-xs text-slate-500">Olá</span>
                 <p className="font-semibold text-slate-900">{identified.name}</p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="password" className="field-label">
-                    {needsNewPassword ? "Crie uma nova senha" : "Senha"}
-                  </label>
+              <Field
+                label={needsNewPassword ? "Crie uma nova senha" : "Senha"}
+                required
+                hint={needsNewPassword ? "Pelo menos 8 caracteres." : undefined}
+              >
+                {(control) => (
                   <div className="relative">
-                    <input
-                      id="password"
+                    <Input
+                      {...control}
+                      autoFocus
                       type={showPassword ? "text" : "password"}
+                      autoComplete={needsNewPassword ? "new-password" : "current-password"}
+                      className="pr-11"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
-                      className="field-input pr-10"
-                      required
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                      onClick={() => setShowPassword((current) => !current)}
+                      aria-label={showPasswordLabel}
+                      title={showPasswordLabel}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition-colors hover:text-slate-700"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                </div>
-
-                {needsNewPassword && (
-                  <div>
-                    <label htmlFor="confirm" className="field-label">
-                      Confirmar senha
-                    </label>
-                    <input
-                      id="confirm"
-                      type={showPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(event) =>
-                        setConfirmPassword(event.target.value)
-                      }
-                      className="field-input"
-                      required
-                    />
-                  </div>
                 )}
-              </div>
+              </Field>
 
-              <button
-                type="submit"
-                className="mt-1 rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-              >
+              {needsNewPassword && (
+                <Field label="Confirmar senha" required>
+                  {(control) => (
+                    <Input
+                      {...control}
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                    />
+                  )}
+                </Field>
+              )}
+
+              <Button type="submit" size="lg">
                 {needsNewPassword ? "Salvar senha e entrar" : "Entrar"}
-              </button>
+              </Button>
 
               {identified.hasPassword && !resetting && (
-                <div className="mt-1 flex justify-center border-t border-slate-200 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetting(true);
-                      setPassword("");
-                      setConfirmPassword("");
-                    }}
-                    className="text-sm font-medium text-brand-600 hover:underline"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetting(true);
+                    setPassword("");
+                    setConfirmPassword("");
+                  }}
+                  className="text-center text-sm font-medium text-brand-600 hover:underline"
+                >
+                  Esqueceu a senha?
+                </button>
               )}
             </form>
           )}
-        </div>
-      </div>
+        </Card>
+      </main>
     </div>
   );
 }

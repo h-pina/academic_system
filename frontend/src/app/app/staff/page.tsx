@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import Button from "@/components/Button";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import Pagination from "@/components/ui/Pagination";
+import { useEffect, useState } from "react";
+import { Pencil, Plus, Trash2, UserX } from "lucide-react";
+import PageHeading from "@/components/PageHeading";
 import StaffFormModal, {
   type StaffSavePayload,
 } from "@/components/staff/StaffFormModal";
+import { Avatar } from "@/components/ui/Avatar";
 import { StatusBadge } from "@/components/ui/Badge";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SearchFilter } from "@/components/ui/Filters";
+import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePagedList } from "@/hooks/usePagedList";
 import { formatCpf } from "@/lib/format";
-import {
-  PROFILE_STATUS_LABELS,
-  STAFF_ROLE_LABELS,
-  statusTone,
-} from "@/lib/labels";
-import { useEffect } from "react";
+import { PROFILE_STATUS_LABELS, STAFF_ROLE_LABELS, statusTone } from "@/lib/labels";
 import type { StaffView } from "@/types";
 
 const PAGE_SIZE = 20;
@@ -54,10 +56,7 @@ export default function StaffPage() {
           method: "PATCH",
           body: JSON.stringify({ role: payload.role, status: payload.status }),
         })
-      : await request("/staff", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+      : await request("/staff", { method: "POST", body: JSON.stringify(payload) });
     setSaving(false);
 
     if (result.ok) {
@@ -82,90 +81,94 @@ export default function StaffPage() {
     }
   };
 
+  const columns: Column<StaffView>[] = [
+    {
+      key: "member",
+      header: "Funcionário",
+      cell: (row) => (
+        <span className="flex items-center gap-3">
+          <Avatar name={row.name} size="sm" />
+          <span className="font-medium text-slate-900">{row.name}</span>
+        </span>
+      ),
+    },
+    {
+      key: "cpf",
+      header: "CPF",
+      cell: (row) => (
+        <span className="font-mono text-xs tabular-nums text-slate-600">
+          {formatCpf(row.cpf)}
+        </span>
+      ),
+    },
+    { key: "email", header: "E-mail", cell: (row) => row.email },
+    { key: "role", header: "Papel", cell: (row) => STAFF_ROLE_LABELS[row.role] },
+    {
+      key: "status",
+      header: "Situação",
+      cell: (row) => (
+        <StatusBadge label={PROFILE_STATUS_LABELS[row.status]} tone={statusTone(row.status)} />
+      ),
+    },
+    {
+      key: "actions",
+      header: "Ações",
+      align: "center",
+      className: "w-28",
+      cell: (row) => (
+        <span className="flex items-center justify-center gap-1">
+          <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ staff: row })}>
+            <Pencil className="h-4 w-4" />
+          </IconButton>
+          <IconButton
+            label={`Remover vínculo administrativo de ${row.name}`}
+            onClick={() => setToRemove(row)}
+            className="hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+          </IconButton>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="p-6">
+      <PageHeading
+        title="Funcionários"
+        description="Administradores e secretaria com acesso ao sistema."
+        actions={
+          <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ staff: null })}>
+            Novo funcionário
+          </Button>
+        }
+      />
+
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="min-w-[14rem] flex-1">
-          <span className="field-label">Buscar</span>
-          <input
-            type="search"
-            className="field-input"
-            placeholder="Nome ou CPF"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        <Button
-          label="Novo funcionário"
-          variant="add"
-          onClick={() => setForm({ staff: null })}
-        />
+        <SearchFilter placeholder="Nome ou CPF" value={search} onChange={setSearch} />
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>CPF</th>
-                <th>E-mail</th>
-                <th>Papel</th>
-                <th>Situação</th>
-                <th className="w-28 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((member) => (
-                <tr key={member.userId}>
-                  <td className="font-medium text-slate-900">{member.name}</td>
-                  <td className="font-mono text-xs text-slate-600">
-                    {formatCpf(member.cpf)}
-                  </td>
-                  <td>{member.email}</td>
-                  <td>{STAFF_ROLE_LABELS[member.role]}</td>
-                  <td>
-                    <StatusBadge
-                      label={PROFILE_STATUS_LABELS[member.status]}
-                      tone={statusTone(member.status)}
-                    />
-                  </td>
-                  <td>
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="edit"
-                        hint="Editar funcionário"
-                        onClick={() => setForm({ staff: member })}
-                      />
-                      <Button
-                        variant="delete"
-                        hint="Remover vínculo administrativo"
-                        onClick={() => setToRemove(member)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!loading && items.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-10 text-center text-sm text-slate-400"
-                  >
-                    Nenhum funcionário encontrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          page={page}
-          pageSize={PAGE_SIZE}
-          total={total}
-          onChange={setPage}
+      <Card className="overflow-hidden">
+        <DataTable
+          caption="Funcionários"
+          columns={columns}
+          rows={items}
+          loading={loading}
+          getRowKey={(row) => row.userId}
+          empty={
+            <EmptyState
+              icon={<UserX className="h-5 w-5" />}
+              title="Nenhum funcionário encontrado"
+              description={
+                debouncedSearch
+                  ? "Nenhum funcionário corresponde à busca."
+                  : "Cadastre o primeiro funcionário para começar."
+              }
+            />
+          }
         />
-      </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+      </Card>
 
       {form && (
         <StaffFormModal
@@ -179,7 +182,7 @@ export default function StaffPage() {
       <ConfirmDialog
         open={toRemove !== null}
         title="Remover vínculo administrativo"
-        message={`Remover o vínculo administrativo de "${toRemove?.name}"? A pessoa continua cadastrada. Não é possível remover você mesmo nem o último administrador ativo.`}
+        message={`O vínculo administrativo de "${toRemove?.name}" será removido e a pessoa continua cadastrada. Não é possível remover você mesmo nem o último administrador ativo.`}
         confirmLabel="Remover"
         onConfirm={handleRemove}
         onClose={() => setToRemove(null)}

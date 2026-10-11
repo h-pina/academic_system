@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Button from "@/components/Button";
+import { Field } from "@/components/ui/Field";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input, Select } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { COURSE_STATUS_LABELS, toOptions } from "@/lib/labels";
 import { MAX_SEMESTERS, validateCourseDraft } from "@/lib/validation";
@@ -39,13 +41,8 @@ export default function CourseFormModal({
   );
   const [status, setStatus] = useState<CourseStatus>(course?.status ?? "active");
 
-  const handleSave = () => {
-    const errors = validateCourseDraft({
-      name,
-      code,
-      departmentId,
-      totalSemesters,
-    });
+  const handleSubmit = () => {
+    const errors = validateCourseDraft({ name, code, departmentId, totalSemesters });
     if (errors.length > 0) {
       showMessage({ type: "WARNING", messages: errors });
       return;
@@ -60,95 +57,80 @@ export default function CourseFormModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-lg">
-        <h3 className="modal-title">{course ? "Editar curso" : "Novo curso"}</h3>
+    <FormModal
+      title={course ? "Editar curso" : "Novo curso"}
+      submitLabel={course ? "Salvar alterações" : "Cadastrar"}
+      loading={loading}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Field label="Nome" required>
+        {(control) => (
+          <Input {...control} value={name} onChange={(event) => setName(event.target.value)} />
+        )}
+      </Field>
 
-        <div className="space-y-4">
-          <label className="block">
-            <span className="field-label">Nome *</span>
-            <input
-              type="text"
-              className="field-input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">Código *</span>
-            <input
-              type="text"
-              maxLength={20}
-              className="field-input uppercase"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">Departamento *</span>
-            <select
-              className="field-input"
-              value={departmentId}
-              onChange={(event) => setDepartmentId(Number(event.target.value))}
-            >
-              <option value={0} disabled>
-                -- Selecione o departamento --
-              </option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.name} ({department.code})
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="field-label">Número de semestres *</span>
-            <input
-              type="number"
-              min={1}
-              max={MAX_SEMESTERS}
-              className="field-input"
-              value={totalSemesters}
-              onChange={(event) =>
-                setTotalSemesters(
-                  event.target.value === "" ? "" : Number(event.target.value),
-                )
-              }
-            />
-          </label>
-
-          <label className="block">
-            <span className="field-label">Situação *</span>
-            <select
-              className="field-input"
-              value={status}
-              onChange={(event) => setStatus(event.target.value as CourseStatus)}
-            >
-              {toOptions(COURSE_STATUS_LABELS).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className="field-hint">
-              Cursos inativos não aceitam novos alunos.
-            </span>
-          </label>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancelar" variant="cancel" onClick={onClose} />
-          <Button
-            label={course ? "Salvar alterações" : "Cadastrar"}
-            variant="save"
-            loading={loading}
-            onClick={handleSave}
+      <Field label="Código" required>
+        {(control) => (
+          <Input
+            {...control}
+            maxLength={20}
+            className="uppercase"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
           />
-        </div>
-      </div>
-    </div>
+        )}
+      </Field>
+
+      <Field label="Departamento" required>
+        {(control) => (
+          <Select
+            {...control}
+            value={departmentId}
+            onChange={(event) => setDepartmentId(Number(event.target.value))}
+          >
+            <option value={0} disabled>
+              Selecione o departamento
+            </option>
+            {departments.map((department) => (
+              <option key={department.id} value={department.id}>
+                {department.name} ({department.code})
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+
+      <Field label="Número de semestres" required>
+        {(control) => (
+          <Input
+            {...control}
+            type="number"
+            min={1}
+            max={MAX_SEMESTERS}
+            value={totalSemesters}
+            onChange={(event) =>
+              setTotalSemesters(event.target.value === "" ? "" : Number(event.target.value))
+            }
+          />
+        )}
+      </Field>
+
+      <Field label="Situação" required hint="Cursos inativos não aceitam novos alunos.">
+        {(control) => (
+          <Select
+            {...control}
+            value={status}
+            onChange={(event) => setStatus(event.target.value as CourseStatus)}
+          >
+            {toOptions(COURSE_STATUS_LABELS).map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+    </FormModal>
   );
 }

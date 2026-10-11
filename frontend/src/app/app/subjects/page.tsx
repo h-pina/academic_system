@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import Button from "@/components/Button";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import Pagination from "@/components/ui/Pagination";
+import { useEffect, useState } from "react";
+import { BookOpen, Pencil, Plus, Trash2 } from "lucide-react";
+import PageHeading from "@/components/PageHeading";
 import SubjectFormModal, {
   type SubjectSavePayload,
 } from "@/components/subjects/SubjectFormModal";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SearchFilter } from "@/components/ui/Filters";
+import Pagination from "@/components/ui/Pagination";
 import { useMessage } from "@/context/MessageContext";
 import { useAllItems } from "@/hooks/useAllItems";
 import { useApi } from "@/hooks/useApi";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePagedList } from "@/hooks/usePagedList";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useEffect } from "react";
 import { prerequisiteFailureMessage } from "@/lib/messages";
 import type { SubjectView } from "@/types";
 
@@ -66,9 +71,8 @@ export default function SubjectsPage() {
 
     const before = (editing?.prerequisites ?? []).map((item) => item.id).sort();
     const after = [...prerequisiteIds].sort();
-    const changed = before.join(",") !== after.join(",");
 
-    if (changed) {
+    if (before.join(",") !== after.join(",")) {
       // Silent: the single message below carries the API's reason (e.g. a
       // dependency cycle), which a second message would otherwise replace.
       const linked = await request(`/subjects/${saved.data.id}/prerequisites`, {
@@ -110,100 +114,100 @@ export default function SubjectsPage() {
     }
   };
 
+  const columns: Column<SubjectView>[] = [
+    {
+      key: "code",
+      header: "Código",
+      cell: (row) => <span className="font-mono text-xs text-slate-600">{row.code}</span>,
+    },
+    {
+      key: "name",
+      header: "Disciplina",
+      cell: (row) => <span className="font-medium text-slate-900">{row.name}</span>,
+    },
+    { key: "hours", header: "Carga (h)", align: "center", cell: (row) => row.workloadHours },
+    {
+      key: "prerequisites",
+      header: "Pré-requisitos",
+      cell: (row) =>
+        row.prerequisites.length === 0 ? (
+          <span className="text-slate-400">—</span>
+        ) : (
+          <span className="font-mono text-xs text-slate-600">
+            {row.prerequisites.map((item) => item.code).join(", ")}
+          </span>
+        ),
+    },
+    { key: "courses", header: "Cursos", align: "center", cell: (row) => row.courseCount },
+    ...(canManage
+      ? [
+          {
+            key: "actions",
+            header: "Ações",
+            align: "center" as const,
+            className: "w-28",
+            cell: (row: SubjectView) => (
+              <span className="flex items-center justify-center gap-1">
+                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ subject: row })}>
+                  <Pencil className="h-4 w-4" />
+                </IconButton>
+                {isAdmin && (
+                  <IconButton
+                    label={`Excluir ${row.name}`}
+                    onClick={() => setToRemove(row)}
+                    className="hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </IconButton>
+                )}
+              </span>
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="p-6">
+      <PageHeading
+        title="Disciplinas"
+        description="Catálogo de disciplinas, com carga horária e pré-requisitos."
+        actions={
+          canManage && (
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ subject: null })}>
+              Nova disciplina
+            </Button>
+          )
+        }
+      />
+
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <label className="min-w-[14rem] flex-1">
-          <span className="field-label">Buscar</span>
-          <input
-            type="search"
-            className="field-input"
-            placeholder="Código ou nome"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-
-        {canManage && (
-          <Button
-            label="Nova disciplina"
-            variant="add"
-            onClick={() => setForm({ subject: null })}
-          />
-        )}
+        <SearchFilter placeholder="Código ou nome" value={search} onChange={setSearch} />
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nome</th>
-                <th className="text-center">Carga (h)</th>
-                <th>Pré-requisitos</th>
-                <th className="text-center">Cursos</th>
-                {canManage && <th className="w-28 text-center">Ações</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((subject) => (
-                <tr key={subject.id}>
-                  <td className="font-mono text-xs text-slate-600">
-                    {subject.code}
-                  </td>
-                  <td className="font-medium text-slate-900">{subject.name}</td>
-                  <td className="text-center">{subject.workloadHours}</td>
-                  <td>
-                    {subject.prerequisites.length === 0 ? (
-                      <span className="text-slate-400">—</span>
-                    ) : (
-                      <span className="font-mono text-xs text-slate-600">
-                        {subject.prerequisites.map((item) => item.code).join(", ")}
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-center">{subject.courseCount}</td>
-                  {canManage && (
-                    <td>
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          variant="edit"
-                          hint="Editar disciplina"
-                          onClick={() => setForm({ subject })}
-                        />
-                        {isAdmin && (
-                          <Button
-                            variant="delete"
-                            hint="Excluir disciplina"
-                            onClick={() => setToRemove(subject)}
-                          />
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {!loading && items.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={canManage ? 6 : 5}
-                    className="px-4 py-10 text-center text-sm text-slate-400"
-                  >
-                    Nenhuma disciplina encontrada.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          page={page}
-          pageSize={PAGE_SIZE}
-          total={total}
-          onChange={setPage}
+      <Card className="overflow-hidden">
+        <DataTable
+          caption="Disciplinas"
+          columns={columns}
+          rows={items}
+          loading={loading}
+          getRowKey={(row) => row.id}
+          empty={
+            <EmptyState
+              icon={<BookOpen className="h-5 w-5" />}
+              title="Nenhuma disciplina encontrada"
+              description={
+                debouncedSearch
+                  ? "Nenhuma disciplina corresponde à busca."
+                  : canManage
+                    ? "Cadastre a primeira disciplina para montar as matrizes."
+                    : "Ainda não há disciplinas cadastradas."
+              }
+            />
+          }
         />
-      </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
+      </Card>
 
       {form && (
         <SubjectFormModal
@@ -218,7 +222,7 @@ export default function SubjectsPage() {
       <ConfirmDialog
         open={toRemove !== null}
         title="Excluir disciplina"
-        message={`Excluir a disciplina "${toRemove?.name}"? Só é possível se ela não estiver em nenhuma matriz nem for pré-requisito de outra disciplina.`}
+        message={`A disciplina "${toRemove?.name}" será excluída. Isso só é possível se ela não estiver em nenhuma matriz nem for pré-requisito de outra disciplina.`}
         onConfirm={handleRemove}
         onClose={() => setToRemove(null)}
       />

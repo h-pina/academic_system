@@ -1,22 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
-import Button from "@/components/Button";
+import { Plus, Trash2 } from "lucide-react";
+import PageHeading from "@/components/PageHeading";
+import { Badge } from "@/components/ui/Badge";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Checkbox, Input, Select } from "@/components/ui/Input";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { StatusBadge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/Field";
+import { Modal } from "@/components/ui/Modal";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useMessage } from "@/context/MessageContext";
 import { useAllItems } from "@/hooks/useAllItems";
 import { useApi } from "@/hooks/useApi";
 import { usePermissions } from "@/hooks/usePermissions";
 import { availableSubjects, fillSemesters } from "@/lib/curriculum";
-import type {
-  CurriculumSubject,
-  CurriculumView,
-  SubjectView,
-} from "@/types";
+import type { CurriculumSubject, CurriculumView, SubjectView } from "@/types";
 
 export default function CurriculumPage() {
   const params = useParams<{ courseId: string }>();
@@ -32,10 +34,9 @@ export default function CurriculumPage() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const result = await request<CurriculumView>(
-      `/courses/${courseId}/curriculum`,
-      { silent: true },
-    );
+    const result = await request<CurriculumView>(`/courses/${courseId}/curriculum`, {
+      silent: true,
+    });
     if (result.ok) {
       setCurriculum(result.data);
       setNotFound(false);
@@ -49,10 +50,7 @@ export default function CurriculumPage() {
   }, [load]);
 
   const semesters = useMemo(
-    () =>
-      curriculum
-        ? fillSemesters(curriculum.semesters, curriculum.totalSemesters)
-        : [],
+    () => (curriculum ? fillSemesters(curriculum.semesters, curriculum.totalSemesters) : []),
     [curriculum],
   );
 
@@ -92,18 +90,10 @@ export default function CurriculumPage() {
     if (!toRemove) return;
     const target = toRemove;
     setToRemove(null);
-    await mutate(
-      `${base}/${target.subjectId}`,
-      { method: "DELETE" },
-      "Disciplina removida da matriz.",
-    );
+    await mutate(`${base}/${target.subjectId}`, { method: "DELETE" }, "Disciplina removida da matriz.");
   };
 
-  const addSubject = async (
-    subjectId: number,
-    semester: number,
-    mandatory: boolean,
-  ) => {
+  const addSubject = async (subjectId: number, semester: number, mandatory: boolean) => {
     const ok = await mutate(
       base,
       { method: "POST", body: JSON.stringify({ subjectId, semester, mandatory }) },
@@ -115,59 +105,61 @@ export default function CurriculumPage() {
   if (notFound) {
     return (
       <div className="p-6">
-        <div className="card p-8 text-center text-sm text-slate-500">
-          Curso não encontrado.
-        </div>
+        <Card>
+          <EmptyState
+            title="Curso não encontrado"
+            description="Volte para a lista de cursos e escolha outro."
+          />
+        </Card>
       </div>
     );
   }
 
   if (!curriculum) {
-    return <div className="p-6 text-sm text-slate-500">Carregando matriz…</div>;
+    return (
+      <div className="space-y-4 p-6">
+        <Skeleton className="h-9 w-72" />
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+      </div>
+    );
   }
 
   const placedIds = new Set(
-    curriculum.semesters.flatMap((entry) => entry.items.map((i) => i.subjectId)),
+    curriculum.semesters.flatMap((entry) => entry.items.map((item) => item.subjectId)),
   );
 
   return (
     <div className="p-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link
-            href="/app/courses"
-            className="mb-1 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-brand-600"
-          >
-            <ArrowLeft className="h-4 w-4" /> Cursos
-          </Link>
-          <h2 className="text-lg font-semibold text-slate-900">
-            Matriz curricular — {curriculum.courseName}
-          </h2>
-          <p className="text-sm text-slate-500">
-            {curriculum.totalSemesters} semestres · {curriculum.totalWorkloadHours}{" "}
-            h no total
-          </p>
-        </div>
-      </div>
+      <PageHeading
+        title={`Matriz curricular — ${curriculum.courseName}`}
+        description={`${curriculum.totalSemesters} semestres · ${curriculum.totalWorkloadHours} h no total`}
+      />
 
       <div className="space-y-4">
         {semesters.map((entry) => (
-          <section key={entry.semester} className="card overflow-hidden">
+          <Card
+            key={entry.semester}
+            className="overflow-hidden"
+            role="region"
+            aria-labelledby={`semester-${entry.semester}`}
+          >
             <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5">
-              <h3 className="text-sm font-semibold text-slate-700">
+              <h2 id={`semester-${entry.semester}`} className="text-sm font-semibold text-slate-700">
                 {entry.semester}º semestre
-                <span className="ml-2 font-normal text-slate-500">
+                <span className="ml-2 font-normal tabular-nums text-slate-500">
                   {entry.workloadHours} h
                 </span>
-              </h3>
+              </h2>
               {canManage && (
-                <button
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={<Plus className="h-4 w-4" />}
                   onClick={() => setAdding(entry.semester)}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50"
                 >
-                  <Plus className="h-4 w-4" /> Adicionar disciplina
-                </button>
+                  Adicionar disciplina
+                </Button>
               )}
             </header>
 
@@ -182,19 +174,16 @@ export default function CurriculumPage() {
                     key={item.subjectId}
                     className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
                   >
-                    <span className="w-24 font-mono text-xs text-slate-500">
-                      {item.code}
-                    </span>
+                    <span className="w-24 font-mono text-xs text-slate-500">{item.code}</span>
                     <span className="min-w-[10rem] flex-1 font-medium text-slate-900">
                       {item.name}
                     </span>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm tabular-nums text-slate-500">
                       {item.workloadHours} h
                     </span>
-                    <StatusBadge
-                      label={item.mandatory ? "Obrigatória" : "Optativa"}
-                      tone={item.mandatory ? "success" : "neutral"}
-                    />
+                    <Badge tone={item.mandatory ? "success" : "neutral"}>
+                      {item.mandatory ? "Obrigatória" : "Optativa"}
+                    </Badge>
                     <span className="min-w-[8rem] text-xs text-slate-500">
                       {item.prerequisites.length > 0
                         ? `Requer: ${item.prerequisites.map((p) => p.code).join(", ")}`
@@ -202,42 +191,42 @@ export default function CurriculumPage() {
                     </span>
 
                     {canManage && (
-                      <div className="flex items-center gap-1">
-                        <select
-                          aria-label="Mover para o semestre"
-                          className="rounded-lg border border-slate-300 bg-surface px-2 py-1 text-sm"
+                      <div className="flex items-center gap-2">
+                        <Select
+                          aria-label={`Semestre de ${item.name}`}
+                          className="!w-auto py-1"
                           value={entry.semester}
                           disabled={busy}
-                          onChange={(event) =>
-                            moveSubject(item, Number(event.target.value))
-                          }
+                          onChange={(event) => moveSubject(item, Number(event.target.value))}
                         >
                           {semesters.map((option) => (
                             <option key={option.semester} value={option.semester}>
                               {option.semester}º
                             </option>
                           ))}
-                        </select>
-                        <button
-                          type="button"
+                        </Select>
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           disabled={busy}
                           onClick={() => toggleMandatory(item)}
-                          className="rounded-lg border border-slate-300 bg-surface px-2 py-1 text-sm text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
                         >
                           {item.mandatory ? "Tornar optativa" : "Tornar obrigatória"}
-                        </button>
-                        <Button
-                          variant="delete"
-                          hint="Remover da matriz"
+                        </Button>
+                        <IconButton
+                          label={`Remover ${item.name} da matriz`}
                           onClick={() => setToRemove(item)}
-                        />
+                          className="hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </IconButton>
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </Card>
         ))}
       </div>
 
@@ -254,7 +243,7 @@ export default function CurriculumPage() {
       <ConfirmDialog
         open={toRemove !== null}
         title="Remover da matriz"
-        message={`Remover "${toRemove?.name}" da matriz deste curso? A disciplina continua cadastrada.`}
+        message={`"${toRemove?.name}" será removida da matriz deste curso. A disciplina continua cadastrada.`}
         confirmLabel="Remover"
         onConfirm={confirmRemove}
         onClose={() => setToRemove(null)}
@@ -271,13 +260,7 @@ interface AddSubjectModalProps {
   onAdd: (subjectId: number, semester: number, mandatory: boolean) => void;
 }
 
-function AddSubjectModal({
-  semester,
-  placedIds,
-  busy,
-  onClose,
-  onAdd,
-}: AddSubjectModalProps) {
+function AddSubjectModal({ semester, placedIds, busy, onClose, onAdd }: AddSubjectModalProps) {
   const subjects = useAllItems<SubjectView>("/subjects");
   const [term, setTerm] = useState("");
   const [mandatory, setMandatory] = useState(true);
@@ -285,24 +268,35 @@ function AddSubjectModal({
   const options = availableSubjects(subjects.items, placedIds, term);
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-h-[90vh] max-w-xl overflow-y-auto">
-        <h3 className="modal-title">Adicionar ao {semester}º semestre</h3>
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={`Adicionar ao ${semester}º semestre`}
+      description="Escolha a disciplina que entra neste semestre."
+      size="lg"
+      footer={
+        <Button variant="secondary" onClick={onClose}>
+          Fechar
+        </Button>
+      }
+    >
+      <div className="space-y-3">
+        <Field label="Buscar disciplina">
+          {(control) => (
+            <Input
+              {...control}
+              type="search"
+              placeholder="Código ou nome"
+              value={term}
+              onChange={(event) => setTerm(event.target.value)}
+            />
+          )}
+        </Field>
 
-        <input
-          type="search"
-          className="field-input mb-3"
-          placeholder="Buscar disciplina"
-          value={term}
-          onChange={(event) => setTerm(event.target.value)}
-        />
-
-        <label className="mb-3 flex items-center gap-2 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={mandatory}
-            onChange={(event) => setMandatory(event.target.checked)}
-          />
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <Checkbox checked={mandatory} onChange={(event) => setMandatory(event.target.checked)} />
           Disciplina obrigatória
         </label>
 
@@ -315,11 +309,9 @@ function AddSubjectModal({
                 onClick={() => onAdd(subject.id, semester, mandatory)}
                 className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50 disabled:opacity-50"
               >
-                <span className="w-24 font-mono text-xs text-slate-500">
-                  {subject.code}
-                </span>
+                <span className="w-24 font-mono text-xs text-slate-500">{subject.code}</span>
                 <span className="flex-1 text-slate-900">{subject.name}</span>
-                <span className="text-slate-500">{subject.workloadHours} h</span>
+                <span className="tabular-nums text-slate-500">{subject.workloadHours} h</span>
               </button>
             </li>
           ))}
@@ -329,11 +321,7 @@ function AddSubjectModal({
             </li>
           )}
         </ul>
-
-        <div className="mt-6 flex justify-end border-t border-slate-200 pt-4">
-          <Button label="Fechar" variant="close" onClick={onClose} />
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

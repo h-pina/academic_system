@@ -104,8 +104,7 @@ Pure logic (sidebar state, active item, breadcrumbs, shortcuts) is in
 ## Status
 
 Tokens, themes, fonts, brand mark, the component library, per-profile
-navigation and the application shell are in place. The migration of every
-screen to the library (task 18) builds on them. Until then the screens keep their own form
-modals; `Button`, `ConfirmDialog`, `StatusBadge`, `Pagination` and the toast
-host already render through the library, and the remapped Tailwind scales keep
-the rest themed.
+navigation, the application shell and every screen are on the library. No
+screen uses legacy CSS or hand-made modals. Polish that remains is the scope of
+task 19 (field-level API errors, filters in the URL, sorting) and the browser
+suite of task 20.

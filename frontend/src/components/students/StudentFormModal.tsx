@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { Field } from "@/components/ui/Field";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input, Select } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { sanitizeCpf } from "@/lib/cpf";
@@ -57,23 +59,19 @@ export default function StudentFormModal({
     const digits = sanitizeCpf(cpf);
     if (editing || digits.length !== 11) return;
 
-    const result = await request<{ exists: boolean }>(
-      `/users/${digits}/exists`,
-      { silent: true },
-    );
+    const result = await request<{ exists: boolean }>(`/users/${digits}/exists`, {
+      silent: true,
+    });
     if (result.ok) setExistingUser(result.data.exists);
   };
 
-  const handleSave = () => {
+  const handleSubmit = () => {
     const errors = editing
       ? validateStudentDraft(
           { cpf: student.cpf, name: student.name, email: student.email, courseId, entryYear },
           { existingUser: true },
         )
-      : validateStudentDraft(
-          { cpf, name, email, courseId, entryYear },
-          { existingUser },
-        );
+      : validateStudentDraft({ cpf, name, email, courseId, entryYear }, { existingUser });
 
     if (errors.length > 0) {
       showMessage({ type: "WARNING", messages: errors });
@@ -93,128 +91,123 @@ export default function StudentFormModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-lg">
-        <h3 className="modal-title">
-          {editing ? "Editar aluno" : "Novo aluno"}
-        </h3>
+    <FormModal
+      title={editing ? "Editar aluno" : "Novo aluno"}
+      submitLabel={editing ? "Salvar alterações" : "Cadastrar"}
+      loading={loading}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      {editing ? (
+        <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm">
+          <p className="font-semibold text-slate-900">{student.name}</p>
+          <p className="text-slate-500">
+            CPF {formatCpf(student.cpf)} · Matrícula {student.registrationNumber ?? "—"}
+          </p>
+        </div>
+      ) : (
+        <>
+          <Field
+            label="CPF"
+            required
+            hint={
+              existingUser
+                ? "Esta pessoa já está cadastrada: nome e e-mail serão mantidos."
+                : undefined
+            }
+          >
+            {(control) => (
+              <Input
+                {...control}
+                inputMode="numeric"
+                maxLength={14}
+                value={formatCpf(cpf)}
+                onChange={(event) => setCpf(event.target.value.replace(/\D/g, ""))}
+                onBlur={checkExistingPerson}
+              />
+            )}
+          </Field>
 
-        <div className="space-y-4">
-          {editing ? (
-            <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm">
-              <p className="font-semibold text-slate-900">{student.name}</p>
-              <p className="text-slate-500">
-                CPF {formatCpf(student.cpf)} · Matrícula{" "}
-                {student.registrationNumber ?? "—"}
-              </p>
-            </div>
-          ) : (
-            <>
-              <label className="block">
-                <span className="field-label">CPF *</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={14}
-                  className="field-input"
-                  value={formatCpf(cpf)}
-                  onChange={(event) => setCpf(event.target.value.replace(/\D/g, ""))}
-                  onBlur={checkExistingPerson}
-                />
-                {existingUser && (
-                  <span className="field-hint">
-                    Esta pessoa já está cadastrada: nome e e-mail serão mantidos.
-                  </span>
-                )}
-              </label>
+          <Field label="Nome" required>
+            {(control) => (
+              <Input
+                {...control}
+                value={name}
+                disabled={existingUser}
+                onChange={(event) => setName(event.target.value)}
+              />
+            )}
+          </Field>
 
-              <label className="block">
-                <span className="field-label">Nome *</span>
-                <input
-                  type="text"
-                  className="field-input"
-                  value={name}
-                  disabled={existingUser}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </label>
+          <Field label="E-mail" required>
+            {(control) => (
+              <Input
+                {...control}
+                type="email"
+                value={email}
+                disabled={existingUser}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            )}
+          </Field>
+        </>
+      )}
 
-              <label className="block">
-                <span className="field-label">E-mail *</span>
-                <input
-                  type="email"
-                  className="field-input"
-                  value={email}
-                  disabled={existingUser}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </label>
-            </>
-          )}
-
-          <label className="block">
-            <span className="field-label">Curso *</span>
-            <select
-              className="field-input"
-              value={courseId}
-              onChange={(event) => setCourseId(Number(event.target.value))}
-            >
-              <option value={0} disabled>
-                -- Selecione o curso --
+      <Field label="Curso" required>
+        {(control) => (
+          <Select
+            {...control}
+            value={courseId}
+            onChange={(event) => setCourseId(Number(event.target.value))}
+          >
+            <option value={0} disabled>
+              Selecione o curso
+            </option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.name} ({course.code})
               </option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.name} ({course.code})
+            ))}
+          </Select>
+        )}
+      </Field>
+
+      <Field
+        label="Ano de ingresso"
+        required
+        hint={
+          editing ? undefined : "A matrícula é gerada automaticamente a partir do ano de ingresso."
+        }
+      >
+        {(control) => (
+          <Input
+            {...control}
+            type="number"
+            value={entryYear}
+            onChange={(event) =>
+              setEntryYear(event.target.value === "" ? "" : Number(event.target.value))
+            }
+          />
+        )}
+      </Field>
+
+      {editing && (
+        <Field label="Situação" required>
+          {(control) => (
+            <Select
+              {...control}
+              value={status}
+              onChange={(event) => setStatus(event.target.value as StudentStatus)}
+            >
+              {toOptions(STUDENT_STATUS_LABELS).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="field-label">Ano de ingresso *</span>
-            <input
-              type="number"
-              className="field-input"
-              value={entryYear}
-              onChange={(event) =>
-                setEntryYear(event.target.value === "" ? "" : Number(event.target.value))
-              }
-            />
-            {!editing && (
-              <span className="field-hint">
-                A matrícula é gerada automaticamente a partir do ano de ingresso.
-              </span>
-            )}
-          </label>
-
-          {editing && (
-            <label className="block">
-              <span className="field-label">Situação *</span>
-              <select
-                className="field-input"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as StudentStatus)}
-              >
-                {toOptions(STUDENT_STATUS_LABELS).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            </Select>
           )}
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancelar" variant="cancel" onClick={onClose} />
-          <Button
-            label={editing ? "Salvar alterações" : "Cadastrar"}
-            variant="save"
-            loading={loading}
-            onClick={handleSave}
-          />
-        </div>
-      </div>
-    </div>
+        </Field>
+      )}
+    </FormModal>
   );
 }

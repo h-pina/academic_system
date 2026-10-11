@@ -77,7 +77,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card p-5">
+    <section className="rounded-xl border border-slate-200 bg-surface shadow-card p-5">
       <h2 className="mb-4 text-base">{title}</h2>
       <div className="flex flex-wrap items-start gap-4">{children}</div>
     </section>
@@ -180,7 +180,7 @@ export default function DesignCatalogPage() {
         />
       </Section>
 
-      <section className="card overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-card overflow-hidden">
         <h2 className="px-5 pt-5 text-base">Tabela</h2>
         <div className="p-2">
           <DataTable
@@ -194,7 +194,7 @@ export default function DesignCatalogPage() {
         <Pagination page={page} pageSize={20} total={45} onChange={setPage} />
       </section>
 
-      <section className="card overflow-hidden">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-card overflow-hidden">
         <h2 className="px-5 pt-5 text-base">Tabela carregando e vazia</h2>
         <div className="grid gap-4 p-2 md:grid-cols-2">
           <DataTable caption="Carregando" columns={COLUMNS} rows={[]} loading skeletonRows={3} getRowKey={(row) => row.id} />

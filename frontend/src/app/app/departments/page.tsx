@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Button from "@/components/Button";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import DepartmentFormModal from "@/components/departments/DepartmentFormModal";
+import PageHeading from "@/components/PageHeading";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -15,15 +20,16 @@ export default function DepartmentsPage() {
   const { isAdmin, canManage } = usePermissions();
 
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<{ department: Department | null } | null>(null);
   const [saving, setSaving] = useState(false);
   const [toRemove, setToRemove] = useState<Department | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     const result = await request<Department[]>("/departments");
     setDepartments(result.ok ? result.data : []);
-    setLoaded(true);
+    setLoading(false);
   }, [request]);
 
   useEffect(() => {
@@ -33,10 +39,10 @@ export default function DepartmentsPage() {
   const handleSave = async (payload: { name: string; code: string }) => {
     const editing = form?.department ?? null;
     setSaving(true);
-    const result = await request(
-      editing ? `/departments/${editing.id}` : "/departments",
-      { method: editing ? "PATCH" : "POST", body: JSON.stringify(payload) },
-    );
+    const result = await request(editing ? `/departments/${editing.id}` : "/departments", {
+      method: editing ? "PATCH" : "POST",
+      body: JSON.stringify(payload),
+    });
     setSaving(false);
 
     if (result.ok) {
@@ -61,76 +67,84 @@ export default function DepartmentsPage() {
     }
   };
 
+  const columns: Column<Department>[] = [
+    {
+      key: "code",
+      header: "Código",
+      cell: (row) => <span className="font-mono text-xs text-slate-600">{row.code}</span>,
+    },
+    {
+      key: "name",
+      header: "Departamento",
+      cell: (row) => <span className="font-medium text-slate-900">{row.name}</span>,
+    },
+    { key: "courses", header: "Cursos", align: "center", cell: (row) => row.courseCount },
+    { key: "teachers", header: "Professores", align: "center", cell: (row) => row.teacherCount },
+    ...(canManage
+      ? [
+          {
+            key: "actions",
+            header: "Ações",
+            align: "center" as const,
+            className: "w-28",
+            cell: (row: Department) => (
+              <span className="flex items-center justify-center gap-1">
+                <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ department: row })}>
+                  <Pencil className="h-4 w-4" />
+                </IconButton>
+                {isAdmin && (
+                  <IconButton
+                    label={`Excluir ${row.name}`}
+                    onClick={() => setToRemove(row)}
+                    className="hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </IconButton>
+                )}
+              </span>
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          {departments.length} departamento{departments.length === 1 ? "" : "s"}
-        </p>
-        {canManage && (
-          <Button
-            label="Novo departamento"
-            variant="add"
-            onClick={() => setForm({ department: null })}
-          />
-        )}
-      </div>
+      <PageHeading
+        title="Departamentos"
+        description="Unidades acadêmicas que reúnem cursos e professores."
+        actions={
+          canManage && (
+            <Button
+              icon={<Plus className="h-4 w-4" />}
+              onClick={() => setForm({ department: null })}
+            >
+              Novo departamento
+            </Button>
+          )
+        }
+      />
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nome</th>
-                <th className="text-center">Cursos</th>
-                <th className="text-center">Professores</th>
-                {canManage && <th className="w-28 text-center">Ações</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {departments.map((department) => (
-                <tr key={department.id}>
-                  <td className="font-mono text-xs text-slate-600">
-                    {department.code}
-                  </td>
-                  <td className="font-medium text-slate-900">{department.name}</td>
-                  <td className="text-center">{department.courseCount}</td>
-                  <td className="text-center">{department.teacherCount}</td>
-                  {canManage && (
-                    <td>
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          variant="edit"
-                          hint="Editar departamento"
-                          onClick={() => setForm({ department })}
-                        />
-                        {isAdmin && (
-                          <Button
-                            variant="delete"
-                            hint="Excluir departamento"
-                            onClick={() => setToRemove(department)}
-                          />
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ))}
-              {loaded && departments.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={canManage ? 5 : 4}
-                    className="px-4 py-10 text-center text-sm text-slate-400"
-                  >
-                    Nenhum departamento cadastrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card className="overflow-hidden">
+        <DataTable
+          caption="Departamentos"
+          columns={columns}
+          rows={departments}
+          loading={loading}
+          getRowKey={(row) => row.id}
+          empty={
+            <EmptyState
+              icon={<Building2 className="h-5 w-5" />}
+              title="Nenhum departamento cadastrado"
+              description={
+                canManage
+                  ? "Cadastre o primeiro departamento para poder criar cursos e professores."
+                  : "Ainda não há departamentos cadastrados."
+              }
+            />
+          }
+        />
+      </Card>
 
       {form && (
         <DepartmentFormModal
@@ -144,7 +158,7 @@ export default function DepartmentsPage() {
       <ConfirmDialog
         open={toRemove !== null}
         title="Excluir departamento"
-        message={`Excluir o departamento "${toRemove?.name}"? Só é possível se ele não tiver cursos nem professores.`}
+        message={`O departamento "${toRemove?.name}" será excluído. Isso só é possível se ele não tiver cursos nem professores.`}
         onConfirm={handleRemove}
         onClose={() => setToRemove(null)}
       />

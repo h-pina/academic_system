@@ -1,10 +1,13 @@
 export { Avatar } from "./Avatar";
 export { Badge, StatusBadge } from "./Badge";
+export { Card } from "./Card";
 export { Button, IconButton } from "./Button";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { DataTable, type Column } from "./DataTable";
 export { EmptyState } from "./EmptyState";
 export { Field, type FieldControlProps } from "./Field";
+export { SearchFilter, SelectFilter } from "./Filters";
+export { FormModal } from "./FormModal";
 export { Checkbox, Input, Select, Textarea } from "./Input";
 export { Modal } from "./Modal";
 export { default as Pagination } from "./Pagination";

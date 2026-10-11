@@ -89,7 +89,7 @@ export default function ProfilePage() {
         description="Atualize seu nome, e-mail e senha. CPF e matrícula só a secretaria altera."
       />
 
-      <dl className="card mb-6 grid gap-4 p-5 sm:grid-cols-3">
+      <dl className="rounded-xl border border-slate-200 bg-surface shadow-card mb-6 grid gap-4 p-5 sm:grid-cols-3">
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">CPF</dt>
           <dd className="mt-1 font-mono text-sm text-slate-900">{formatCpf(profile.cpf)}</dd>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
         </div>
       </dl>
 
-      <form onSubmit={handleSubmit} noValidate className="card space-y-4 p-5">
+      <form onSubmit={handleSubmit} noValidate className="rounded-xl border border-slate-200 bg-surface shadow-card space-y-4 p-5">
         <Field label="Nome" required error={errors.name}>
           {(control) => (
             <Input

@@ -7,7 +7,7 @@ import { UserX } from "lucide-react";
 export default function NoProfileNotice() {
   return (
     <div className="flex h-full items-center justify-center p-6">
-      <div className="card max-w-md p-8 text-center">
+      <div className="rounded-xl border border-slate-200 bg-surface shadow-card max-w-md p-8 text-center">
         <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
           <UserX className="h-6 w-6" />
         </span>

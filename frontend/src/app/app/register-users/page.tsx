@@ -1,66 +1,67 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2, UserX } from "lucide-react";
+import PageHeading from "@/components/PageHeading";
+import UserFormModal, { type UserDraft } from "@/components/users/UserFormModal";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Button, IconButton } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import UserFormModal, {
-  type UserDraft,
-} from "@/components/users/UserFormModal";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SearchFilter } from "@/components/ui/Filters";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { ROLE_LABELS } from "@/lib/access";
 import { formatCpf } from "@/lib/format";
 import type { User } from "@/types";
 
-const EMPTY_USER: UserDraft = {
-  cpf: "",
-  name: "",
-  email: "",
-  password: "",
-};
-
 export default function RegisterUsersPage() {
   const { request } = useApi();
   const { showMessage } = useMessage();
 
   const [users, setUsers] = useState<User[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<{ user: User | null } | null>(null);
+  const [toDelete, setToDelete] = useState<User | null>(null);
 
-  const [editingUser, setEditingUser] = useState<User | UserDraft | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-
-  const loadUsers = useCallback(async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
     const result = await request<User[]>("/users");
     setUsers(result.ok ? result.data : []);
+    setLoading(false);
   }, [request]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    load();
+  }, [load]);
 
-  const handleNew = () => {
-    setEditingUser(EMPTY_USER);
-    setIsEditing(false);
-  };
-
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setIsEditing(true);
-  };
+  const visible = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return users;
+    const digits = needle.replace(/\D/g, "");
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(needle) ||
+        user.email.toLowerCase().includes(needle) ||
+        (digits !== "" &&
+          (user.cpf.includes(digits) || (user.registrationNumber ?? "").includes(digits))),
+    );
+  }, [users, search]);
 
   const handleSave = async (draft: UserDraft) => {
-    setBusy(true);
-    const result = isEditing
-      ? await request(`/users/${draft.cpf}`, {
+    const editing = form?.user ?? null;
+    setSaving(true);
+    const result = editing
+      ? await request(`/users/${editing.cpf}`, {
           method: "PUT",
-          body: JSON.stringify({
-            name: draft.name,
-            email: draft.email,
-          }),
+          body: JSON.stringify({ name: draft.name, email: draft.email }),
         })
-      : await request(`/users`, {
+      : await request("/users", {
           method: "POST",
           body: JSON.stringify({
             cpf: draft.cpf,
@@ -69,123 +70,157 @@ export default function RegisterUsersPage() {
             ...(draft.password ? { password: draft.password } : {}),
           }),
         });
-    setBusy(false);
+    setSaving(false);
 
     if (result.ok) {
       showMessage({
         type: "SUCCESS",
-        messages: [isEditing ? "Usuário atualizado." : "Usuário cadastrado."],
+        messages: [editing ? "Usuário atualizado." : "Usuário cadastrado."],
       });
-      setEditingUser(null);
-      loadUsers();
+      setForm(null);
+      load();
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!userToDelete) return;
-    const target = userToDelete;
-    setUserToDelete(null);
+  const handleDelete = async () => {
+    if (!toDelete) return;
+    const target = toDelete;
+    setToDelete(null);
 
     const result = await request(`/users/${target.cpf}`, { method: "DELETE" });
     if (result.ok) {
       showMessage({ type: "SUCCESS", messages: ["Usuário excluído."] });
-      loadUsers();
+      load();
     }
   };
 
+  const columns: Column<User>[] = [
+    {
+      key: "person",
+      header: "Pessoa",
+      cell: (row) => (
+        <span className="flex items-center gap-3">
+          <Avatar name={row.name} size="sm" />
+          <span>
+            <span className="block font-medium text-slate-900">{row.name}</span>
+            <span className="block text-xs text-slate-500">{row.email}</span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: "cpf",
+      header: "CPF",
+      cell: (row) => (
+        <span className="font-mono text-xs tabular-nums text-slate-600">
+          {formatCpf(row.cpf)}
+        </span>
+      ),
+    },
+    {
+      key: "registration",
+      header: "Matrícula",
+      cell: (row) => (
+        <span className="font-mono text-xs tabular-nums text-slate-600">
+          {row.registrationNumber ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "roles",
+      header: "Perfis",
+      cell: (row) => (
+        <span className="flex flex-wrap gap-1">
+          {row.roles.length === 0 && <Badge tone="warning">Sem vínculo</Badge>}
+          {row.roles.map((role) => (
+            <Badge key={role} tone="neutral">
+              {ROLE_LABELS[role]}
+            </Badge>
+          ))}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Ações",
+      align: "center",
+      className: "w-28",
+      cell: (row) => (
+        <span className="flex items-center justify-center gap-1">
+          <IconButton label={`Editar ${row.name}`} onClick={() => setForm({ user: row })}>
+            <Pencil className="h-4 w-4" />
+          </IconButton>
+          <IconButton
+            label={`Excluir ${row.name}`}
+            onClick={() => setToDelete(row)}
+            className="hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+          </IconButton>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          {users.length} usuário{users.length === 1 ? "" : "s"}
+      <PageHeading
+        title="Usuários"
+        description="Pessoas com acesso ao sistema, inclusive as que ainda não têm vínculo."
+        actions={
+          <Button icon={<Plus className="h-4 w-4" />} onClick={() => setForm({ user: null })}>
+            Novo usuário
+          </Button>
+        }
+      />
+
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <SearchFilter
+          placeholder="Nome, e-mail, CPF ou matrícula"
+          value={search}
+          onChange={setSearch}
+        />
+        <p className="pb-2 text-sm text-slate-500">
+          {visible.length} usuário{visible.length === 1 ? "" : "s"}
         </p>
-        <Button label="Novo usuário" variant="add" onClick={handleNew} />
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>CPF</th>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfis</th>
-                <th className="w-32 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.cpf}>
-                  <td className="font-mono text-xs text-slate-600">
-                    {formatCpf(user.cpf)}
-                  </td>
-                  <td className="font-medium text-slate-900">{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {user.roles.length === 0 && (
-                        <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                          Sem vínculo
-                        </span>
-                      )}
-                      {user.roles.map((role) => (
-                        <span
-                          key={role}
-                          className="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600"
-                        >
-                          {ROLE_LABELS[role]}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="edit"
-                        hint="Editar este usuário"
-                        onClick={() => handleEdit(user)}
-                      />
-                      <Button
-                        variant="delete"
-                        hint="Excluir este usuário"
-                        onClick={() => setUserToDelete(user)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-10 text-center text-sm text-slate-400"
-                  >
-                    Nenhum usuário cadastrado.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Card className="overflow-hidden">
+        <DataTable
+          caption="Usuários"
+          columns={columns}
+          rows={visible}
+          loading={loading}
+          getRowKey={(row) => row.id}
+          empty={
+            <EmptyState
+              icon={<UserX className="h-5 w-5" />}
+              title="Nenhum usuário encontrado"
+              description={
+                search
+                  ? "Nenhum usuário corresponde à busca."
+                  : "Cadastre o primeiro usuário para começar."
+              }
+            />
+          }
+        />
+      </Card>
 
-      {editingUser && (
+      {form && (
         <UserFormModal
-          user={editingUser}
-          editing={isEditing}
-          loading={busy}
-          onClose={() => setEditingUser(null)}
+          user={form.user}
+          loading={saving}
+          onClose={() => setForm(null)}
           onSave={handleSave}
         />
       )}
 
       <ConfirmDialog
-        open={userToDelete !== null}
-        title="Confirmar exclusão"
-        message={`Tem certeza de que deseja excluir o usuário "${userToDelete?.name}"? Esta ação não pode ser desfeita.`}
-        onConfirm={handleDeleteConfirm}
-        onClose={() => setUserToDelete(null)}
+        open={toDelete !== null}
+        title="Excluir usuário"
+        message={`O usuário "${toDelete?.name}" e os vínculos dele serão excluídos. Esta ação não pode ser desfeita.`}
+        onConfirm={handleDelete}
+        onClose={() => setToDelete(null)}
       />
     </div>
   );

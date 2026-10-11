@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
+import { Field } from "@/components/ui/Field";
+import { FormModal } from "@/components/ui/FormModal";
+import { Input, Select } from "@/components/ui/Input";
 import { useMessage } from "@/context/MessageContext";
 import { useApi } from "@/hooks/useApi";
 import { sanitizeCpf } from "@/lib/cpf";
 import { formatCpf } from "@/lib/format";
-import {
-  PROFILE_STATUS_LABELS,
-  STAFF_ROLE_LABELS,
-  toOptions,
-} from "@/lib/labels";
+import { PROFILE_STATUS_LABELS, STAFF_ROLE_LABELS, toOptions } from "@/lib/labels";
 import { validateStaffDraft } from "@/lib/validation";
 import type { ProfileStatus, StaffRole, StaffView } from "@/types";
 
@@ -55,17 +53,14 @@ export default function StaffFormModal({
     const digits = sanitizeCpf(cpf);
     if (editing || digits.length !== 11) return;
 
-    const result = await request<{ exists: boolean }>(
-      `/users/${digits}/exists`,
-      { silent: true },
-    );
+    const result = await request<{ exists: boolean }>(`/users/${digits}/exists`, {
+      silent: true,
+    });
     if (result.ok) setExistingUser(result.data.exists);
   };
 
-  const handleSave = () => {
-    const errors = editing
-      ? []
-      : validateStaffDraft({ cpf, name, email }, { existingUser });
+  const handleSubmit = () => {
+    const errors = editing ? [] : validateStaffDraft({ cpf, name, email }, { existingUser });
 
     if (errors.length > 0) {
       showMessage({ type: "WARNING", messages: errors });
@@ -84,108 +79,103 @@ export default function StaffFormModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card max-w-lg">
-        <h3 className="modal-title">
-          {editing ? "Editar funcionário" : "Novo funcionário"}
-        </h3>
+    <FormModal
+      title={editing ? "Editar funcionário" : "Novo funcionário"}
+      submitLabel={editing ? "Salvar alterações" : "Cadastrar"}
+      loading={loading}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      {editing ? (
+        <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm">
+          <p className="font-semibold text-slate-900">{staff.name}</p>
+          <p className="text-slate-500">CPF {formatCpf(staff.cpf)}</p>
+        </div>
+      ) : (
+        <>
+          <Field
+            label="CPF"
+            required
+            hint={
+              existingUser
+                ? "Esta pessoa já está cadastrada: nome e e-mail serão mantidos."
+                : undefined
+            }
+          >
+            {(control) => (
+              <Input
+                {...control}
+                inputMode="numeric"
+                maxLength={14}
+                value={formatCpf(cpf)}
+                onChange={(event) => setCpf(event.target.value.replace(/\D/g, ""))}
+                onBlur={checkExistingPerson}
+              />
+            )}
+          </Field>
 
-        <div className="space-y-4">
-          {editing ? (
-            <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm">
-              <p className="font-semibold text-slate-900">{staff.name}</p>
-              <p className="text-slate-500">CPF {formatCpf(staff.cpf)}</p>
-            </div>
-          ) : (
-            <>
-              <label className="block">
-                <span className="field-label">CPF *</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={14}
-                  className="field-input"
-                  value={formatCpf(cpf)}
-                  onChange={(event) => setCpf(event.target.value.replace(/\D/g, ""))}
-                  onBlur={checkExistingPerson}
-                />
-                {existingUser && (
-                  <span className="field-hint">
-                    Esta pessoa já está cadastrada: nome e e-mail serão mantidos.
-                  </span>
-                )}
-              </label>
+          <Field label="Nome" required>
+            {(control) => (
+              <Input
+                {...control}
+                value={name}
+                disabled={existingUser}
+                onChange={(event) => setName(event.target.value)}
+              />
+            )}
+          </Field>
 
-              <label className="block">
-                <span className="field-label">Nome *</span>
-                <input
-                  type="text"
-                  className="field-input"
-                  value={name}
-                  disabled={existingUser}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </label>
+          <Field label="E-mail" required>
+            {(control) => (
+              <Input
+                {...control}
+                type="email"
+                value={email}
+                disabled={existingUser}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            )}
+          </Field>
+        </>
+      )}
 
-              <label className="block">
-                <span className="field-label">E-mail *</span>
-                <input
-                  type="email"
-                  className="field-input"
-                  value={email}
-                  disabled={existingUser}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </label>
-            </>
-          )}
+      <Field
+        label="Papel"
+        required
+        hint="O administrador também tem todas as permissões da secretaria."
+      >
+        {(control) => (
+          <Select
+            {...control}
+            value={role}
+            onChange={(event) => setRole(event.target.value as StaffRole)}
+          >
+            {toOptions(STAFF_ROLE_LABELS).map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
 
-          <label className="block">
-            <span className="field-label">Papel *</span>
-            <select
-              className="field-input"
-              value={role}
-              onChange={(event) => setRole(event.target.value as StaffRole)}
+      {editing && (
+        <Field label="Situação" required>
+          {(control) => (
+            <Select
+              {...control}
+              value={status}
+              onChange={(event) => setStatus(event.target.value as ProfileStatus)}
             >
-              {toOptions(STAFF_ROLE_LABELS).map((option) => (
+              {toOptions(PROFILE_STATUS_LABELS).map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
-            <span className="field-hint">
-              O administrador também tem todas as permissões da secretaria.
-            </span>
-          </label>
-
-          {editing && (
-            <label className="block">
-              <span className="field-label">Situação *</span>
-              <select
-                className="field-input"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as ProfileStatus)}
-              >
-                {toOptions(PROFILE_STATUS_LABELS).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            </Select>
           )}
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
-          <Button label="Cancelar" variant="cancel" onClick={onClose} />
-          <Button
-            label={editing ? "Salvar alterações" : "Cadastrar"}
-            variant="save"
-            loading={loading}
-            onClick={handleSave}
-          />
-        </div>
-      </div>
-    </div>
+        </Field>
+      )}
+    </FormModal>
   );
 }

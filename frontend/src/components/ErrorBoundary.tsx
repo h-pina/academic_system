@@ -32,7 +32,7 @@ export default class ErrorBoundary extends React.Component<
 
     return (
       <div className="fixed inset-0 z-[9999] flex h-full w-full flex-col items-center justify-center bg-canvas p-4">
-        <div className="card max-w-md p-8 text-center">
+        <div className="rounded-xl border border-slate-200 bg-surface shadow-card max-w-md p-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-2xl">
             ⚠️
           </div>
