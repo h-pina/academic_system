@@ -6,7 +6,7 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 
 ## Escopo da versão 1
 
-- Cadastro de **alunos** e **professores**, vinculados aos usuários/autenticação.
+- Cadastro de **funcionários administrativos**, **professores** e **alunos**, todos vinculados a um usuário (`users`) e à autenticação.
 - Cadastro de **departamentos**, **cursos** e **disciplinas**.
 - **Matriz curricular**: associação de disciplinas a cursos (semestre, carga horária, pré-requisitos).
 - Controle de acesso por perfil (Administrador, Secretaria, Professor, Aluno).
@@ -31,6 +31,14 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 | Disciplina   | Unidade curricular com carga horária (ex.: Cálculo I)                    |
 | Matriz       | Conjunto de disciplinas de um curso, organizadas por semestre            |
 
+## Usuários e perfis
+
+- Toda pessoa é uma linha em `users` (identidade e credenciais).
+- O perfil é uma **extensão 1:1** de `users`, com `userId` como chave: `staff` (`admin` ou `secretary`), `teachers` e `students`.
+- Os perfis são **derivados** de quais tabelas contêm o usuário; nenhum perfil é gravado separadamente.
+- Um usuário pode ter **vários perfis** (ex.: professor e aluno) ou **nenhum**. Sem perfil, ele faz login, mas só vê a tela "cadastro sem vínculo".
+- Detalhes: tarefas 02 (permissões) e 03 (modelo de dados).
+
 ## Autenticação
 
 - Login aceita **CPF** (11 dígitos) **ou matrícula** (10 dígitos) no mesmo campo.
@@ -46,6 +54,24 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 - `api`: NestJS 10 + TypeORM + SQLite
 - `frontend`: Next.js (App Router) + Tailwind
 
+## Tarefas
+
+| Tarefa | Arquivo | Tema |
+|--------|---------|------|
+| 01  | `01-rebrand-e-limpeza.md`            | Remover requisições e `positions`; renomear o projeto |
+| 02  | `02-perfis-e-permissoes.md`          | Perfis derivados, JWT e `RolesGuard` |
+| 03  | `03-modelo-de-dados.md`              | Entidades, matrícula e usuário sem vínculo |
+| 04  | `04-api-alunos.md`                   | CRUD de alunos |
+| 04b | `04b-api-funcionarios.md`            | CRUD de funcionários e usuários órfãos |
+| 05  | `05-api-professores.md`              | CRUD de professores |
+| 06  | `06-api-cursos.md`                   | Departamentos e cursos |
+| 07  | `07-api-disciplinas.md`              | Disciplinas, matriz e pré-requisitos |
+| 08  | `08-seed-de-dados.md`                | Dados de exemplo |
+| 09  | `09-frontend-alunos-professores.md`  | Telas de alunos e professores |
+| 10  | `10-frontend-cursos-disciplinas.md`  | Telas de cursos, disciplinas e matriz |
+| 11  | `11-navegacao-e-dashboard.md`        | Menu por perfil e dashboard |
+| 12  | `12-testes-e-documentacao.md`        | Testes e documentação |
+
 ## Ordem de execução
 
 `01 → 03 → 02 → (04, 04b, 05, 06, 07) → 08 → (09, 10) → 11 → 12`
@@ -54,4 +80,4 @@ Transformar o monorepo atual (Sistema de Requisição de Materiais) em um **Sist
 
 ## Critério de conclusão
 
-Um administrador consegue entrar, cadastrar departamento, curso, disciplinas, montar a matriz, cadastrar professores e alunos, tudo pela interface web.
+Um administrador consegue entrar, cadastrar departamento, curso, disciplinas, montar a matriz, cadastrar funcionários, professores e alunos, tudo pela interface web, e cada perfil enxerga apenas o que lhe cabe.
