@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Staff } from '../staff/entities/staff.entity';
+import { Teacher } from '../teachers/entities/teacher.entity';
+import { Student } from '../students/entities/student.entity';
 
 @Injectable()
 export class UsersRepository {
@@ -12,6 +15,20 @@ export class UsersRepository {
 
   findAll(): Promise<User[]> {
     return this.users.find({ order: { name: 'ASC' } });
+  }
+
+  /** Users with no row in staff, teachers or students ("users without link"). */
+  findWithoutProfile(): Promise<User[]> {
+    return this.users
+      .createQueryBuilder('user')
+      .leftJoin(Staff, 'staff', 'staff.userId = user.id')
+      .leftJoin(Teacher, 'teacher', 'teacher.userId = user.id')
+      .leftJoin(Student, 'student', 'student.userId = user.id')
+      .where('staff.userId IS NULL')
+      .andWhere('teacher.userId IS NULL')
+      .andWhere('student.userId IS NULL')
+      .orderBy('user.name', 'ASC')
+      .getMany();
   }
 
   findByCpf(cpf: string): Promise<User | null> {

@@ -43,6 +43,10 @@ the **CPF** (digits only) and password.
 | `11122233396` | Carol Analyst | Analyst (3)         | `password123` |
 | `45678912364` | Dave Pending  | Analyst (3)         | _(none — set on first login via the "set your password" flow)_ |
 
+## Data model
+
+Entity-relationship diagram and deletion rules: [`docs/data-model.md`](docs/data-model.md).
+
 ## Tests
 
 ```bash

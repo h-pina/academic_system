@@ -76,20 +76,20 @@ Usuário em `users` sem linha em `staff`, `teachers` ou `students`:
 
 ## Checklist
 
-- [ ] Revisar as entidades acima e ajustar campos (ex.: telefone, data de nascimento)
-- [ ] Migrar `User`: PK `id`, `cpf` único, remover `roleId`, adicionar `registrationNumber` e `active`
-- [ ] Criar entidades `Staff`, `Teacher`, `Student` com `userId` como PK/FK
-- [ ] Definir regras de remoção (ex.: não excluir curso com alunos ativos → inativar)
+- [x] Revisar as entidades acima e ajustar campos (mantidos os campos propostos; telefone e data de nascimento ficam para quando forem necessários)
+- [x] Migrar `User`: PK `id`, `cpf` único, adicionar `registrationNumber` e `active`. **`roleId` fica transitório e é removido na tarefa 02** (decisão: a 02 o substitui pelos perfis derivados; removê-lo aqui quebraria auth e frontend)
+- [x] Criar entidades `Staff`, `Teacher`, `Student` com `userId` como PK/FK (mais `Department`, `Course`, `CurriculumItem`, `Subject`, `SubjectPrerequisite` e `RegistrationSequence`)
+- [x] Definir regras de remoção: ver `docs/data-model.md` (perfil `CASCADE` com o usuário; departamento, curso e disciplina em uso `RESTRICT`; encerrar vínculo = inativar)
 - [x] Formato da matrícula definido: `AAAA` + 6 dígitos sequenciais por ano (10 dígitos), sem colisão com CPF (11 dígitos)
-- [ ] Criar `CHECK` no schema: `registrationNumber` só dígitos, tamanho 10
-- [ ] Definir como o sequencial por ano é controlado (tabela de contadores ou `MAX` dentro da transação)
-- [ ] Atualizar `api/sql/schema.sql` com tabelas, FKs, `CHECK` e índices
-- [ ] Documentar o diagrama ER (Mermaid) em `README.md` ou `docs/`
-- [ ] Decidir como o banco é criado (synchronize vs. schema.sql) e manter o padrão atual
+- [x] Criar `CHECK` no schema: `registrationNumber` só dígitos, tamanho 10
+- [x] Sequencial por ano controlado por **tabela de contadores** `registration_sequences` (decisão: um número nunca é reutilizado); a geração é implementada na tarefa 04
+- [x] Atualizar `api/sql/schema.sql` com tabelas, FKs, `CHECK` e índices
+- [x] Documentar o diagrama ER (Mermaid) em `docs/data-model.md`
+- [x] Banco criado por `synchronize` fora de produção; `schema.sql` é documentação mantida à mão (decisão). **Ainda não há migrations**: criar antes de qualquer deploy em produção
 
 ## Critérios de aceite
 
 - API sobe com o novo schema e banco novo criado do zero.
 - Todas as FKs, unicidades e o `CHECK` de `staff.role` estão definidos no banco.
 - Diagrama ER versionado no repositório.
-- Consulta de usuários órfãos disponível.
+- Consulta de usuários órfãos disponível (`UsersRepository.findWithoutProfile`).

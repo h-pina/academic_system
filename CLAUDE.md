@@ -33,4 +33,7 @@ npm run seed:force --workspace api        # recreate seed data
 
 - Everyone is a row in `users`. Profiles are extensions of it (`staff`, `teachers`, `students`, keyed by `userId`); roles are derived from which tables contain the user. A user may have several profiles or none.
 - Login with CPF (11 digits) or matrícula (10 digits: year + 6-digit sequence).
+- Data model: see `docs/data-model.md`. Constraints (CHECKs, FKs, uniqueness) are enforced in the database and covered by `api/test/data-model.e2e-spec.ts`.
+- `users.role_id` is transitional; task 02 replaces it with derived roles and removes it.
+- Schema is created by TypeORM `synchronize` outside production; there are no migrations yet.
 - Positions and requisitions were removed in task 01.
