@@ -8,14 +8,14 @@ Garantir qualidade mínima com testes automatizados e deixar o projeto documenta
 
 ## Contexto
 
-- `api/package.json` ainda não tem script de testes
+- A infraestrutura de testes (Vitest + supertest, `npm test`) foi criada na tarefa 01; cada tarefa já entrega os testes das suas funcionalidades
 - `api/postman_collection.json`
 - `README.md` na raiz
 
 ## Checklist
 
 ### Testes (API)
-- [ ] Configurar Jest (`@nestjs/testing`) em `api` e adicionar script `test`
+- [x] Infraestrutura de testes configurada na tarefa 01 (Vitest, `@nestjs/testing`, supertest, banco SQLite em memória)
 - [ ] Testes de service: students, teachers, courses, departments, subjects/curriculum
 - [ ] Testes do `RolesGuard` para os quatro perfis
 - [ ] Teste do detector de ciclos de pré-requisitos
@@ -27,7 +27,7 @@ Garantir qualidade mínima com testes automatizados e deixar o projeto documenta
 
 ### Qualidade
 - [ ] `npm run lint`, `typecheck` e `build` passando nos dois workspaces
-- [ ] Script de teste na raiz (`npm test`) executando os workspaces
+- [x] Script de teste na raiz (`npm test`) executando os workspaces (criado na tarefa 01)
 
 ### Documentação
 - [ ] Atualizar o `README.md`: visão do sistema, requisitos, como rodar, contas de exemplo, perfis e permissões

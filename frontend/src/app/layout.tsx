@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Material Requisition System",
+  title: "Sistema Acadêmico",
   description:
-    "Internal system for registering users and positions and generating material requisitions.",
+    "Sistema administrativo acadêmico para gestão de alunos, professores, cursos e disciplinas.",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="pt-BR" className={inter.variable}>
       <body className="font-sans antialiased">
         <Providers>
           {children}

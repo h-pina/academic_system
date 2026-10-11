@@ -1,13 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowRight,
-  ClipboardList,
-  IdCard,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, ClipboardList, Users, type LucideIcon } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 
 const ROUTE_META: Record<
@@ -17,14 +11,6 @@ const ROUTE_META: Record<
   "register-users": {
     icon: Users,
     description: "Add, edit, and remove people who can access the system.",
-  },
-  "register-positions": {
-    icon: IdCard,
-    description: "Maintain the catalogue of job positions.",
-  },
-  "generate-requisition": {
-    icon: ClipboardList,
-    description: "Create material requisitions and track their approval.",
   },
 };
 

@@ -3,8 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './features/users/users.module';
 import { AuthModule } from './features/auth/auth.module';
-import { PositionsModule } from './features/positions/positions.module';
-import { RequisitionsModule } from './features/requisitions/requisitions.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
@@ -21,8 +19,6 @@ import { SeedModule } from './seed/seed.module';
     }),
     UsersModule,
     AuthModule,
-    PositionsModule,
-    RequisitionsModule,
     SeedModule,
   ],
 })

@@ -1,10 +1,14 @@
-Monorepo for the **Material Requisition System**: a NestJS backend and a Next.js
-web client, managed as npm workspaces.
+Monorepo for the **Academic System**: an administrative system for a university
+(students, teachers, departments, courses and subjects), built as a NestJS backend
+and a Next.js web client, managed as npm workspaces.
+
+> The domain features are being built task by task; see `tasks/`. For now the
+> system provides authentication and user registration.
 
 | Workspace   | Stack                        | Default port | Description |
 |-------------|------------------------------|--------------|-------------|
-| `api`       | NestJS 10 + TypeORM (SQLite) | `3001`       | Auth, users, and job-position registry. Port of the original Flask `login_routes.py`. |
-| `frontend`  | Next.js (App Router)         | `3000`       | Web client that talks to `api`. |
+| `api`       | NestJS 10 + TypeORM (SQLite) | `3001`       | Authentication (CPF + password) and user registration. |
+| `frontend`  | Next.js (App Router)         | `3005`       | Web client that talks to `api`. |
 
 ## Requirements
 
@@ -23,7 +27,7 @@ npm run dev
 ```
 
 `npm run dev` runs both workspaces together (`api` on `http://localhost:3001`,
-`frontend` on `http://localhost:3000`). On its first boot the API creates the
+`frontend` on `http://localhost:3005`). On its first boot the API creates the
 SQLite file at `api/data/app.sqlite` and seeds it with the baseline data below.
 
 ## Accounts
@@ -39,3 +43,9 @@ the **CPF** (digits only) and password.
 | `11122233396` | Carol Analyst | Analyst (3)         | `password123` |
 | `45678912364` | Dave Pending  | Analyst (3)         | _(none — set on first login via the "set your password" flow)_ |
 
+## Tests
+
+```bash
+npm test               # runs the API e2e tests (in-memory SQLite, no setup needed)
+npm run typecheck      # typechecks both workspaces
+```

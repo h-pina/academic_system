@@ -6,14 +6,6 @@ export interface SeedUser {
   password: string | null;
 }
 
-export const SEED_POSITIONS: readonly string[] = [
-  'Administrator',
-  'Manager',
-  'Coordinator',
-  'Analyst',
-  'Field Technician',
-];
-
 export const SEED_USERS: readonly SeedUser[] = [
   {
     cpf: '12345678909',

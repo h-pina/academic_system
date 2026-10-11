@@ -1,6 +1,6 @@
 "use client";
 
-import { Boxes, LogOut, UserRound } from "lucide-react";
+import { GraduationCap, LogOut, UserRound } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 
 export default function Header() {
@@ -10,13 +10,13 @@ export default function Header() {
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-          <Boxes className="h-5 w-5" />
+          <GraduationCap className="h-5 w-5" />
         </span>
         <div className="leading-tight">
           <p className="text-sm font-semibold tracking-tight text-slate-900">
-            Material Requisition System
+            Sistema Acadêmico
           </p>
-          <p className="text-xs text-slate-500">Internal operations</p>
+          <p className="text-xs text-slate-500">Gestão acadêmica</p>
         </div>
       </div>
 

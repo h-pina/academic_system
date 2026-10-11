@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Boxes, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { useMessage } from "@/context/MessageContext";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
@@ -120,10 +120,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
-            <Boxes className="h-6 w-6" />
+            <GraduationCap className="h-6 w-6" />
           </span>
           <h1 className="text-base font-semibold text-slate-900">
-            Material Requisition System
+            Sistema Acadêmico
           </h1>
           <p className="text-sm text-slate-500">Sign in to continue</p>
         </div>

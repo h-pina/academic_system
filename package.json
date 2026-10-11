@@ -1,5 +1,5 @@
 {
-  "name": "rm-engsoft",
+  "name": "academic-system",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -12,7 +12,9 @@
     "dev:web": "npm run dev --workspace frontend",
     "build": "npm run build --workspaces --if-present",
     "start:api": "npm run start:prod --workspace api",
-    "seed": "npm run seed --workspace api"
+    "seed": "npm run seed --workspace api",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"

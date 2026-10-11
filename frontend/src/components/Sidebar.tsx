@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ClipboardList,
-  IdCard,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ClipboardList, Users, type LucideIcon } from "lucide-react";
 import type { MenuItem } from "@/types";
 
 interface SidebarProps {
@@ -17,8 +12,6 @@ interface SidebarProps {
 
 const ROUTE_ICONS: Record<string, LucideIcon> = {
   "register-users": Users,
-  "register-positions": IdCard,
-  "generate-requisition": ClipboardList,
 };
 
 export default function Sidebar({ items, onNavigate }: SidebarProps) {

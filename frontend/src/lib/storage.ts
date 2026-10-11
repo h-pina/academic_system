@@ -1,8 +1,8 @@
 import type { AuthProfile } from "@/types";
 
 const KEYS = {
-  TOKEN: "@rm:token",
-  PROFILE: "@rm:profile",
+  TOKEN: "@academic:token",
+  PROFILE: "@academic:profile",
 } as const;
 
 function isBrowser(): boolean {
