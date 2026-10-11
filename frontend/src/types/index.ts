@@ -44,3 +44,105 @@ export interface AppMessage {
   type: MessageType;
   messages: string[];
 }
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export type ProfileStatus = "active" | "inactive";
+export type StudentStatus = "active" | "locked" | "graduated" | "dropped";
+export type TeacherTitle = "bachelor" | "specialist" | "master" | "doctor";
+export type StaffRole = "admin" | "secretary";
+export type CourseStatus = "active" | "inactive";
+
+export interface StudentView {
+  userId: number;
+  cpf: string;
+  name: string;
+  email: string;
+  registrationNumber: string | null;
+  courseId: number;
+  courseName: string;
+  entryYear: number;
+  status: StudentStatus;
+}
+
+export interface TeacherView {
+  userId: number;
+  cpf: string;
+  name: string;
+  email: string;
+  registrationNumber: string | null;
+  departmentId: number;
+  departmentName: string;
+  title: TeacherTitle;
+  status: ProfileStatus;
+}
+
+export interface StaffView {
+  userId: number;
+  cpf: string;
+  name: string;
+  email: string;
+  registrationNumber: string | null;
+  role: StaffRole;
+  status: ProfileStatus;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+  code: string;
+  courseCount: number;
+  teacherCount: number;
+}
+
+export interface CourseView {
+  id: number;
+  name: string;
+  code: string;
+  departmentId: number;
+  departmentName: string;
+  totalSemesters: number;
+  status: CourseStatus;
+  studentCount: number;
+}
+
+export interface SubjectSummary {
+  id: number;
+  code: string;
+  name: string;
+  workloadHours: number;
+}
+
+export interface SubjectView extends SubjectSummary {
+  description: string | null;
+  prerequisites: SubjectSummary[];
+  courseCount: number;
+}
+
+export interface CurriculumSubject {
+  subjectId: number;
+  code: string;
+  name: string;
+  workloadHours: number;
+  mandatory: boolean;
+  prerequisites: { id: number; code: string; name: string }[];
+}
+
+export interface CurriculumSemester {
+  semester: number;
+  workloadHours: number;
+  items: CurriculumSubject[];
+}
+
+export interface CurriculumView {
+  courseId: number;
+  courseName: string;
+  totalSemesters: number;
+  totalWorkloadHours: number;
+  semesters: CurriculumSemester[];
+}

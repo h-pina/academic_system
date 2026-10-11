@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ClipboardList, Users, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  ClipboardList,
+  GraduationCap,
+  Presentation,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { useUser } from "@/context/UserContext";
 
 const ROUTE_META: Record<
@@ -10,7 +17,15 @@ const ROUTE_META: Record<
 > = {
   "register-users": {
     icon: Users,
-    description: "Add, edit, and remove people who can access the system.",
+    description: "Cadastre e edite as pessoas que acessam o sistema.",
+  },
+  students: {
+    icon: GraduationCap,
+    description: "Consulte e cadastre alunos, cursos e situação acadêmica.",
+  },
+  teachers: {
+    icon: Presentation,
+    description: "Consulte e cadastre professores e seus departamentos.",
   },
 };
 

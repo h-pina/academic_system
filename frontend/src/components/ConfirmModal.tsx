@@ -4,6 +4,8 @@ interface ConfirmModalProps {
   open: boolean;
   title: string;
   message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -12,6 +14,8 @@ export default function ConfirmModal({
   open,
   title,
   message,
+  confirmLabel = "Excluir",
+  cancelLabel = "Cancelar",
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
@@ -34,13 +38,13 @@ export default function ConfirmModal({
             onClick={onClose}
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
-            Cancel
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
           >
-            Delete
+            {confirmLabel}
           </button>
         </div>
       </div>

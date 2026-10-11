@@ -4,5 +4,17 @@
     "label": "Cadastro de usuários",
     "route": "register-users",
     "roles": ["admin"]
+  },
+  {
+    "code": 2,
+    "label": "Alunos",
+    "route": "students",
+    "roles": ["admin", "secretary", "teacher"]
+  },
+  {
+    "code": 3,
+    "label": "Professores",
+    "route": "teachers",
+    "roles": ["admin", "secretary", "teacher"]
   }
 ]
