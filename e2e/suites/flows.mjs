@@ -12,7 +12,7 @@ import {
   waitForText,
   waitForTextGone,
 } from '../support/page.mjs';
-import { WEB_URL } from '../support/stack.mjs';
+import { API_URL, WEB_URL } from '../support/stack.mjs';
 
 const ADMIN = '12345678909';
 const SECRETARY = '98765432100';
@@ -46,7 +46,7 @@ const FLOWS = [
       const titles = (await menuSections(page)).map((section) => section.title);
       check(
         'admin menu is grouped by purpose',
-        titles.join('|') === 'pessoas|estrutura acadêmica|administração|conta',
+        titles.join('|') === 'pessoas|estrutura acadêmica|operação acadêmica|administração|conta',
         titles.join('|'),
       );
 
@@ -82,7 +82,7 @@ const FLOWS = [
       const items = (await menuSections(student.page)).flatMap((s) => s.items);
       check(
         'student sees only their own path',
-        items.join('|') === 'Meu curso|Minha matriz|Disciplinas do curso|Meus dados',
+        items.join('|') === 'Painel acadêmico|Inscrição em turmas|Avisos|Calendário acadêmico|Meu curso|Meus dados',
         items.join('|'),
       );
       for (const route of ['students', 'staff', 'courses']) {
@@ -97,7 +97,7 @@ const FLOWS = [
       const teacherItems = (await menuSections(teacher.page)).flatMap((s) => s.items);
       check(
         'teacher sees department and catalogue',
-        teacherItems.join('|') === 'Meu departamento|Alunos|Cursos e matrizes|Disciplinas|Meus dados',
+        teacherItems.join('|') === 'Turmas|Avisos|Calendário acadêmico|Meu departamento|Alunos|Cursos e matrizes|Disciplinas|Meus dados',
         teacherItems.join('|'),
       );
 
@@ -312,16 +312,126 @@ const FLOWS = [
       await page.click('button[aria-label="Abrir menu"]');
       await page.waitForSelector('[role="dialog"]');
       const links = await page.evaluate(() => [...document.querySelectorAll('[role="dialog"] a')].map((a) => a.innerText.trim()));
-      check('the drawer lists the student modules', links.join('|') === 'Meu curso|Minha matriz|Disciplinas do curso|Meus dados', links.join('|'));
+      check('the drawer lists the student modules', links.join('|') === 'Painel acadêmico|Inscrição em turmas|Avisos|Calendário acadêmico|Meu curso|Meus dados', links.join('|'));
       await page.keyboard.press('Escape');
       await sleep(300);
 
-      for (const path of ['/app', '/app/my-course', '/app/my-curriculum', '/app/my-subjects', '/app/profile']) {
+      for (const path of ['/app', '/app/my-course', '/app/my-course/subjects', '/app/profile']) {
         await goto(page, path);
         await sleep(500);
         const extra = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         check(`no horizontal page scroll: ${path}`, extra <= 0, `${extra}px`);
       }
+    },
+  },
+  {
+    name: 'semester operations',
+    run: async (ctx, check) => {
+      const clickText = (page, text) =>
+        page.evaluate((needle) => {
+          const element = [...document.querySelectorAll('label, button, [role="radio"]')].find(
+            (e) => e.innerText.trim() === needle,
+          );
+          if (!element) return false;
+          element.click();
+          return true;
+        }, text);
+
+      // Enrolling registers a request; the seat is only decided after the period (RN03).
+      const judy = await session(ctx, '2026000002');
+      await goto(judy.page, '/app/enrollment');
+      await waitForText(judy.page, 'Inscrições abertas');
+      await waitForText(judy.page, 'Linear Algebra');
+      await clickByLabel(judy.page, 'Inscrever-se em MAT103 T01 - Linear Algebra');
+      await waitForText(judy.page, 'Solicitação registrada');
+      await waitForText(judy.page, 'Cancelar solicitação');
+      const requested = await judy.page.evaluate(() =>
+        [...document.querySelectorAll('tr')].find((row) => row.innerText.includes('MAT103 T01') && row.innerText.includes('Solicitada'))?.innerText ?? '',
+      );
+      check('enrolling registers a request, not a seat', requested.includes('Solicitada') && !requested.includes('Cursando'));
+
+      // A missing prerequisite is explained, not silently refused (RN04, MSG01).
+      const erin = await session(ctx, STUDENT_BY_MATRICULA);
+      await goto(erin.page, '/app/enrollment');
+      await waitForText(erin.page, 'Data Structures');
+      await clickByLabel(erin.page, 'Inscrever-se em CC102 T01 - Data Structures');
+      await waitForText(erin.page, 'Pré-requisito não atendido');
+      check('a missing prerequisite is explained in Portuguese', true);
+
+      // The academic panel gathers grades, attendance, activities and news (UC03).
+      await goto(erin.page, '/app/panel');
+      await waitForText(erin.page, 'CC101 T01 - Introduction to Programming');
+      const panel = await bodyText(erin.page);
+      check(
+        'the panel shows grades, attendance, activity and news',
+        panel.includes('Prova 1') &&
+          panel.includes('8,6') &&
+          panel.includes('Lista de exercícios 1') &&
+          panel.includes('Primeira prova'),
+      );
+      check('the panel keeps the closed class outcome', panel.includes('Reprovado por nota'));
+
+      // The Administration approves a class a teacher requested (UC08, RN01).
+      const bob = await session(ctx, SECRETARY);
+      await goto(bob.page, '/app/classes?status=pending');
+      await waitForText(bob.page, 'Databases');
+      await clickButton(bob.page, 'Aprovar');
+      await waitForText(bob.page, 'aprovada e aberta para inscrição');
+      check('the Administration approves a pending class', true);
+      await goto(erin.page, '/app/enrollment');
+      await waitForText(erin.page, 'Databases');
+      check('the approved class is now in the catalogue', true);
+
+      // Once the period ends, the Administration allocates the seats.
+      const api = async (path, options = {}, token) =>
+        (await fetch(`${API_URL}${path}`, {
+          ...options,
+          headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        })).json();
+      const { accessToken } = await api('/auth/login', { method: 'POST', body: JSON.stringify({ identifier: SECRETARY, password: 'password123' }) });
+      const [calendar] = await api('/calendars', {}, accessToken);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      await api(`/calendars/${calendar.id}`, { method: 'PATCH', body: JSON.stringify({ enrollmentEnd: yesterday }) }, accessToken);
+
+      await goto(bob.page, '/app/calendar');
+      await waitForText(bob.page, 'Alocar vagas');
+      await clickButton(bob.page, 'Alocar vagas');
+      await bob.page.waitForSelector('[role="dialog"]');
+      await clickButton(bob.page, 'Alocar vagas', '[role="dialog"]');
+      await waitForText(bob.page, 'Alocação concluída');
+      check('the Administration allocates the seats after the period', true);
+
+      await goto(judy.page, '/app/enrollment');
+      await waitForText(judy.page, 'Minhas inscrições');
+      const confirmed = await judy.page.evaluate(() =>
+        [...document.querySelectorAll('tr')].find((row) => row.innerText.includes('MAT103 T01') && row.innerText.includes('Cursando'))?.innerText ?? '',
+      );
+      check('the allocated request becomes an enrollment', confirmed.includes('Cursando'));
+
+      // The teacher in charge sees the grade sheet and the attendance.
+      const carol = await session(ctx, TEACHER);
+      await goto(carol.page, '/app/classes');
+      await waitForText(carol.page, 'CC101 T01 - Introduction to Programming');
+      await carol.page.evaluate(() =>
+        [...document.querySelectorAll('a')]
+          .find((a) => a.innerText.includes('CC101 T01') && a.href.includes('/classes/'))
+          .click(),
+      );
+      await waitForText(carol.page, 'Alunos inscritos');
+      await clickText(carol.page, 'Notas');
+      await waitForText(carol.page, 'Média mínima para aprovação');
+      const sheet = await bodyText(carol.page);
+      // Table headers are upper-cased by CSS, so compare without case.
+      const lower = sheet.toLowerCase();
+      check('the teacher sees the grade sheet', lower.includes('erin student') && lower.includes('prova 1'));
+      await clickText(carol.page, 'Frequência');
+      await waitForText(carol.page, 'Aulas registradas');
+      check('the teacher sees the attendance', true);
+
+      // A student does not reach the class management screens.
+      await goto(erin.page, '/app/classes');
+      await erin.page.waitForFunction(() => location.pathname === '/app', { timeout: 10000 });
+      check('a student is redirected away from /app/classes', true);
     },
   },
 ];

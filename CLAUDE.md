@@ -16,6 +16,7 @@ npm install
 cp api/.env.example api/.env              # set JWT_SECRET
 cp frontend/.env.example frontend/.env.local
 npm run dev                               # api + frontend together
+npm run dev:fresh                         # delete the database, then start (reseeds demo data)
 
 npm test                                  # API e2e (Vitest + supertest, in-memory SQLite) and frontend unit tests
 npm run typecheck                         # both workspaces
@@ -42,3 +43,4 @@ npm run seed:force --workspace api        # recreate seed data
 - Roles (`admin`, `secretary`, `teacher`, `student`) are derived on every request from the profile tables (`RolesService`); guard routes with `@Auth(...roles)` / `@AuthWithoutProfile()`. `admin` includes `secretary`. A user without profile can sign in but gets 403 elsewhere.
 - Schema is created by TypeORM `synchronize` outside production; there are no migrations yet.
 - Positions and requisitions were removed in task 01.
+- Semester operations (calendar, classes, enrollment, grades, attendance, activities, news, student panel) follow `Report.pdf`; the plan and what was done is in `docs/spec-gap-analysis.md` and `tasks/21-38-conformidade-com-a-especificacao.md`. Enrollment is *inscrição* in the UI (never "matrícula"); "now" always comes from `ClockService` so deadlines are testable; operational docs are `docs/operations.md` and `docs/lgpd.md`.

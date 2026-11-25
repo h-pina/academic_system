@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { seedAcademicDemo } from './academic-demo';
 import * as bcrypt from 'bcrypt';
 import { User } from '../features/users/entities/user.entity';
 import { RegistrationSequence } from '../features/users/entities/registration-sequence.entity';
@@ -51,6 +52,7 @@ export class SeederService implements OnApplicationBootstrap {
     @InjectRepository(SubjectPrerequisite)
     private readonly prerequisites: Repository<SubjectPrerequisite>,
     private readonly config: ConfigService,
+    private readonly dataSource: DataSource,
   ) {
     this.saltRounds = Number(this.config.get('BCRYPT_SALT_ROUNDS') ?? 12);
   }
@@ -73,6 +75,9 @@ export class SeederService implements OnApplicationBootstrap {
   async run({ force = false }: { force?: boolean } = {}): Promise<void> {
     await this.seedStructure(force);
     await this.seedUsers(force);
+    if (this.config.get<string>('SEED_ACADEMIC_DEMO') !== 'false') {
+      await seedAcademicDemo(this.dataSource);
+    }
   }
 
   private async seedStructure(force: boolean): Promise<void> {

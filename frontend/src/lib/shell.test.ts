@@ -43,7 +43,11 @@ describe("buildBreadcrumbs", () => {
 
   it("names a module page as the current page", () => {
     expect(buildBreadcrumbs("/app/students")).toEqual([{ label: "Alunos" }]);
-    expect(buildBreadcrumbs("/app/my-curriculum")).toEqual([{ label: "Minha matriz" }]);
+    expect(buildBreadcrumbs("/app/my-course")).toEqual([{ label: "Meu curso" }]);
+    expect(buildBreadcrumbs("/app/my-course/subjects")).toEqual([
+      { label: "Meu curso", href: "/app/my-course" },
+      { label: "Lista de disciplinas" },
+    ]);
   });
 
   it("links the module on a nested page and skips identifiers", () => {

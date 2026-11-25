@@ -269,7 +269,7 @@ describe('Departments and courses API (e2e)', () => {
         .expect(200);
       const cc = res.body.items.find((c: { code: string }) => c.code === 'CC');
       // Erin, Ivan and Karl are Computer Science students.
-      expect(cc.studentCount).toBe(3);
+      expect(cc.studentCount).toBe(4);
     });
 
     it('updates a course and can inactivate it', async () => {

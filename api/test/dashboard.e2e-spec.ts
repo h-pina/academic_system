@@ -63,7 +63,7 @@ describe('Dashboard (e2e)', () => {
     );
     // CC: Erin and Ivan are active (Karl is locked). MAT: Judy and Heidi are
     // active (Liam is graduated).
-    expect(byCode).toEqual({ CC: 2, MAT: 2 });
+    expect(byCode).toEqual({ CC: 3, MAT: 2 });
   });
 
   it('gives a teacher the overview of their department', async () => {
@@ -75,10 +75,10 @@ describe('Dashboard (e2e)', () => {
       code: 'DCC',
       name: 'Computer Science',
       activeTeachers: 3,
-      activeStudents: 2,
+      activeStudents: 3,
     });
     expect(res.body.teacher.courses).toEqual([
-      expect.objectContaining({ code: 'CC', activeStudents: 2 }),
+      expect.objectContaining({ code: 'CC', activeStudents: 3 }),
     ]);
   });
 

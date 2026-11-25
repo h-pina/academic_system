@@ -98,3 +98,9 @@ Fase focada em identidade visual, navegação e experiência de uso, sem novas r
 | 20 | `20-verificacao-visual-e-e2e.md`       | Testes de navegador e regressão visual |
 
 Ordem: `14 → 15 → 16 → 17 → 18 → 19 → 20` (a 16 só depende da 13 e pode andar em paralelo com a 14 e a 15).
+
+## Fase 3: conformidade com a especificação (Report.pdf)
+
+Operação do semestre: calendário, turmas, inscrição, notas, frequência, atividades, avisos e painel do aluno.
+Todas as tarefas estão em `21-38-conformidade-com-a-especificacao.md`; a análise de lacunas está em
+`docs/spec-gap-analysis.md`. Ordem: `21 → 22 → 23 → 24 → 25 → (26, 27, 28, 29) → 30 → (31 a 34) → (35, 36, 37) → 38`.

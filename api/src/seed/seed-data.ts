@@ -185,6 +185,15 @@ export const SEED_USERS: readonly SeedUser[] = [
     registrationNumber: '2025000002',
     profiles: [{ kind: 'student', courseCode: 'CC', entryYear: 2025 }],
   },
+  // The one student for trying every enrollment case (see docs/guia-de-testes.md).
+  {
+    cpf: '10020030088',
+    name: 'Nina Tester',
+    email: 'nina@example.com',
+    password: SEED_PASSWORD,
+    registrationNumber: '2025000003',
+    profiles: [{ kind: 'student', courseCode: 'CC', entryYear: 2025 }],
+  },
   {
     cpf: '55566677720',
     name: 'Judy Student',

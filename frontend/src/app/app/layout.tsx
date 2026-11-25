@@ -5,12 +5,22 @@ import { usePathname, useRouter } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import NoProfileNotice from "@/components/NoProfileNotice";
 import AppShell from "@/components/shell/AppShell";
+import TimeTravelBar from "@/components/shell/TimeTravelBar";
+import { ClockProvider } from "@/context/ClockContext";
 import { useUser } from "@/context/UserContext";
 import { useApi } from "@/hooks/useApi";
 import { canAccessRoute } from "@/lib/access";
 import type { AuthProfile } from "@/types";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ClockProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </ClockProvider>
+  );
+}
+
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { profile, roleName, hydrated, navigation, actions } = useUser();
@@ -59,6 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <AppShell sections={null} user={user} onSignOut={() => actions.clearUser()}>
         {allowed ? children : <NoProfileNotice />}
+        <TimeTravelBar />
       </AppShell>
     );
   }
@@ -70,6 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       onSignOut={() => actions.clearUser()}
     >
       {allowed ? children : null}
+      <TimeTravelBar />
     </AppShell>
   );
 }

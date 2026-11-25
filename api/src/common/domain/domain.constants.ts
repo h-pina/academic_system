@@ -36,3 +36,41 @@ export function inList(column: string, values: readonly string[]): string {
 /** The registration number (matrícula) is `YYYY` + 6 sequential digits. */
 export const REGISTRATION_NUMBER_LENGTH = 10;
 export const CPF_LENGTH = 11;
+
+export const SEMESTER_STATUSES = ['draft', 'active', 'closed'] as const;
+export type SemesterStatus = (typeof SEMESTER_STATUSES)[number];
+
+export const CLASS_STATUSES = ['pending', 'approved', 'rejected', 'closed'] as const;
+export type ClassStatus = (typeof CLASS_STATUSES)[number];
+
+export const ENROLLMENT_STATUSES = [
+  'requested',
+  'not_allocated',
+  'confirmed',
+  'cancelled',
+  'locked',
+  'approved',
+  'failed_grade',
+  'failed_attendance',
+] as const;
+export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
+
+/**
+ * Statuses that hold a seat. A `requested` enrollment holds nothing: seats are
+ * decided by the allocation that runs after the enrollment period ends.
+ */
+export const ACTIVE_ENROLLMENT_STATUSES: readonly EnrollmentStatus[] = [
+  'confirmed',
+  'approved',
+  'failed_grade',
+  'failed_attendance',
+];
+
+export const REOPENING_STATUSES = ['pending', 'approved', 'rejected'] as const;
+export type ReopeningStatus = (typeof REOPENING_STATUSES)[number];
+
+/** Maximum share of absences before failing by attendance (RN08). */
+export const MAX_ABSENCE_PERCENT = 25;
+export const DEFAULT_MIN_PASSING_GRADE = 6;
+/** Grades are reported on a 0-10 scale. */
+export const GRADE_SCALE = 10;

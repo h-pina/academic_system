@@ -1,5 +1,10 @@
 import {
+  BarChart3,
   BookOpen,
+  Calendar,
+  ClipboardCheck,
+  Megaphone,
+  ListChecks,
   Building2,
   GraduationCap,
   IdCard,
@@ -26,6 +31,12 @@ const ICONS: Record<IconKey, LucideIcon> = {
   courses: Library,
   staff: IdCard,
   users: Users,
+  calendar: Calendar,
+  classes: Presentation,
+  enrollment: ListChecks,
+  panel: BarChart3,
+  news: Megaphone,
+  reopenings: ClipboardCheck,
   components: LayoutGrid,
 };
 

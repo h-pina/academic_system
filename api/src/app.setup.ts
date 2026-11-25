@@ -3,6 +3,7 @@ import {
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
+import { applySecurity, resolveCorsOrigins } from './common/security/security';
 import { translateFieldErrors } from './common/validation/validation-messages';
 
 /**
@@ -10,7 +11,8 @@ import { translateFieldErrors } from './common/validation/validation-messages';
  * and the e2e tests, so both run with the same pipes and CORS settings.
  */
 export function configureApp(app: INestApplication): void {
-  app.enableCors();
+  applySecurity(app, process.env);
+  app.enableCors({ origin: resolveCorsOrigins(process.env) });
 
   app.useGlobalPipes(
     new ValidationPipe({

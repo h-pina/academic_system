@@ -11,6 +11,8 @@
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "npm run dev --workspace api",
     "dev:web": "npm run dev --workspace frontend",
+    "db:reset": "rm -f api/data/app.sqlite api/data/app.sqlite-journal api/data/app.sqlite-wal api/data/app.sqlite-shm",
+    "dev:fresh": "npm run db:reset && npm run dev",
     "build": "npm run build --workspaces --if-present",
     "start:api": "npm run start:prod --workspace api",
     "seed": "npm run seed --workspace api",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableSubjects, fillSemesters } from "@/lib/curriculum";
+import { availableSubjects, curriculumProgress, fillSemesters } from "@/lib/curriculum";
 import type { CurriculumSemester } from "@/types";
 
 const semester = (
@@ -59,5 +59,50 @@ describe("availableSubjects", () => {
     expect(availableSubjects(all, new Set([3]), "mat").map((s) => s.id)).toEqual([
       1,
     ]);
+  });
+});
+
+describe("curriculumProgress", () => {
+  const semesters = [
+    {
+      semester: 1,
+      workloadHours: 120,
+      items: [
+        { subjectId: 1, workloadHours: 60 },
+        { subjectId: 2, workloadHours: 60 },
+      ],
+    },
+    { semester: 2, workloadHours: 90, items: [{ subjectId: 3, workloadHours: 30 }, { subjectId: 4, workloadHours: 60 }] },
+  ] as unknown as CurriculumSemester[];
+  const enrollment = (status: string, id: number) => ({ status, class: { subject: { id } } });
+
+  it("separates passed, ongoing and untaken subjects, with the hours", () => {
+    const result = curriculumProgress(semesters, [
+      enrollment("approved", 1),
+      enrollment("confirmed", 2),
+      enrollment("failed_grade", 3),
+    ]);
+    expect(result.bySubject.get(1)).toBe("approved");
+    expect(result.bySubject.get(2)).toBe("in_progress");
+    expect(result.bySubject.get(3)).toBe("not_taken");
+    expect(result.bySubject.get(4)).toBe("not_taken");
+    expect(result.completedHours).toBe(60);
+    expect(result.inProgressHours).toBe(60);
+    expect(result.remainingHours).toBe(150);
+    expect(result.totalHours).toBe(210);
+    expect(result.percentCompleted).toBe(29);
+  });
+
+  it("counts a request as in progress, but not a cancelled or unallocated one", () => {
+    const result = curriculumProgress(semesters, [
+      enrollment("requested", 1),
+      enrollment("cancelled", 2),
+      enrollment("not_allocated", 3),
+    ]);
+    expect([1, 2, 3].map((id) => result.bySubject.get(id))).toEqual(["in_progress", "not_taken", "not_taken"]);
+  });
+
+  it("handles an empty curriculum", () => {
+    expect(curriculumProgress([], []).percentCompleted).toBe(0);
   });
 });

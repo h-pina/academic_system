@@ -152,10 +152,10 @@ export default function AppHomePage() {
         >
           <Tiles tiles={studentTiles(dashboard.student)} />
           <Link
-            href="/app/my-curriculum"
+            href="/app/my-course"
             className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
           >
-            Ver a minha matriz <ArrowRight className="h-4 w-4" />
+            Ver o meu curso e a matriz <ArrowRight className="h-4 w-4" />
           </Link>
         </Section>
       )}

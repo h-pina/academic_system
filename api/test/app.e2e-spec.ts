@@ -72,6 +72,7 @@ describe('Academic System API (e2e)', () => {
         registrationNumber: '2026000001',
         roles: ['student'],
       });
+      expect(me.body.id).toEqual(expect.any(Number));
     });
 
     it('rejects an unknown registration number with 401', async () => {
@@ -109,6 +110,7 @@ describe('Academic System API (e2e)', () => {
         .expect(200);
 
       expect(res.body).toEqual({
+        id: expect.any(Number),
         cpf: ADMIN_CPF,
         name: 'Alice Admin',
         email: 'alice@example.com',
@@ -148,7 +150,7 @@ describe('Academic System API (e2e)', () => {
         .set(auth())
         .expect(200);
 
-      expect(res.body).toHaveLength(13);
+      expect(res.body).toHaveLength(14);
       for (const user of res.body) {
         expect(user).not.toHaveProperty('passwordHash');
       }

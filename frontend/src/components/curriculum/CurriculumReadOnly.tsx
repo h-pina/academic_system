@@ -1,13 +1,21 @@
 import { Badge } from "@/components/ui/Badge";
-import { fillSemesters } from "@/lib/curriculum";
+import { fillSemesters, type SubjectProgress } from "@/lib/curriculum";
 import type { CurriculumView } from "@/types";
 
 interface CurriculumReadOnlyProps {
   curriculum: CurriculumView;
+  /** When given, each subject shows whether the student passed it. */
+  progress?: Map<number, SubjectProgress>;
 }
 
+const PROGRESS_BADGES = {
+  approved: { tone: "success", label: "Aprovada" },
+  in_progress: { tone: "brand", label: "Em andamento" },
+  not_taken: { tone: "neutral", label: "Não cursada" },
+} as const;
+
 /** A curriculum by semester, for people who only read it. */
-export default function CurriculumReadOnly({ curriculum }: CurriculumReadOnlyProps) {
+export default function CurriculumReadOnly({ curriculum, progress }: CurriculumReadOnlyProps) {
   const semesters = fillSemesters(curriculum.semesters, curriculum.totalSemesters);
 
   return (
@@ -50,9 +58,12 @@ export default function CurriculumReadOnly({ curriculum }: CurriculumReadOnlyPro
                   <span className="text-sm tabular-nums text-slate-500">
                     {item.workloadHours} h
                   </span>
-                  <Badge tone={item.mandatory ? "success" : "neutral"}>
-                    {item.mandatory ? "Obrigatória" : "Optativa"}
-                  </Badge>
+                  <Badge tone="neutral">{item.mandatory ? "Obrigatória" : "Optativa"}</Badge>
+                  {progress && (
+                    <Badge tone={PROGRESS_BADGES[progress.get(item.subjectId) ?? "not_taken"].tone}>
+                      {PROGRESS_BADGES[progress.get(item.subjectId) ?? "not_taken"].label}
+                    </Badge>
+                  )}
                   <span className="min-w-[8rem] text-xs text-slate-500">
                     {item.prerequisites.length > 0
                       ? `Requer: ${item.prerequisites.map((p) => p.code).join(", ")}`

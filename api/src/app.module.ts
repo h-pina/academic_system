@@ -11,9 +11,24 @@ import { CoursesModule } from './features/courses/courses.module';
 import { SubjectsModule } from './features/subjects/subjects.module';
 import { DatabaseModule } from './common/database/database.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
+import { ClockModule } from './common/clock/clock.service';
+import { AuditModule } from './features/audit/audit.module';
+import { SettingsModule } from './features/settings/settings.module';
+import { CalendarModule } from './features/calendar/calendar.module';
+import { ClassesModule } from './features/classes/classes.module';
+import { EnrollmentsModule } from './features/enrollments/enrollments.module';
+import { GradesModule } from './features/grades/grades.module';
+import { AttendanceModule } from './features/attendance/attendance.module';
+import { ActivitiesModule } from './features/activities/activities.module';
+import { NewsModule } from './features/news/news.module';
+import { PanelModule } from './features/panel/panel.module';
+import { ReportsModule } from './features/reports/reports.module';
+import { HealthController } from './health/health.controller';
+import { TimeTravelModule } from './features/clock/clock.module';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
+  controllers: [HealthController],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
@@ -26,6 +41,19 @@ import { SeedModule } from './seed/seed.module';
       }),
     }),
     DatabaseModule,
+    ClockModule,
+    TimeTravelModule,
+    AuditModule,
+    SettingsModule,
+    CalendarModule,
+    ClassesModule,
+    EnrollmentsModule,
+    GradesModule,
+    AttendanceModule,
+    ActivitiesModule,
+    NewsModule,
+    PanelModule,
+    ReportsModule,
     UsersModule,
     AuthModule,
     StaffModule,

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { LoginRateLimitGuard } from '../../common/security/login-rate-limit.guard';
 import { AuthWithoutProfile } from './roles.decorator';
 import { CurrentAuthUser } from './current-user.decorator';
 import { AuthUser } from './auth-user.interface';
@@ -10,11 +11,13 @@ import { ResetPasswordDto } from '../users/dto/change-password.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(LoginRateLimitGuard)
   @Get('access/:identifier')
   checkAccess(@Param('identifier') identifier: string) {
     return this.authService.checkAccess(identifier);
   }
 
+  @UseGuards(LoginRateLimitGuard)
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.identifier, dto.password);
@@ -26,6 +29,7 @@ export class AuthController {
     return this.authService.getProfile(user.userId);
   }
 
+  @UseGuards(LoginRateLimitGuard)
   @Put('password/reset')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.identifier, dto.newPassword);

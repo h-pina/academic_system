@@ -39,6 +39,8 @@ export class UsersController {
     return { exists: await this.usersService.exists(cpf) };
   }
 
+  /** Personal data: restricted to staff (it was public before RNF04/RNF05 hardening). */
+  @Auth('admin', 'secretary')
   @Get(':cpf/email')
   async getEmail(@Param('cpf') cpf: string) {
     return { email: await this.usersService.getEmail(cpf) };

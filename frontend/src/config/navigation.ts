@@ -18,6 +18,12 @@ export type IconKey =
   | "courses"
   | "staff"
   | "users"
+  | "calendar"
+  | "classes"
+  | "enrollment"
+  | "panel"
+  | "news"
+  | "reopenings"
   | "components";
 
 export interface NavItem {
@@ -41,20 +47,8 @@ export const ITEMS = {
   "my-course": {
     route: "my-course",
     label: "Meu curso",
-    description: "Seu curso, situação, matrícula e carga horária.",
+    description: "Seu curso, a matriz com o que você já cursou e a carga horária restante.",
     icon: "my-course",
-  },
-  "my-curriculum": {
-    route: "my-curriculum",
-    label: "Minha matriz",
-    description: "As disciplinas do seu curso por semestre, com pré-requisitos.",
-    icon: "curriculum",
-  },
-  "my-subjects": {
-    route: "my-subjects",
-    label: "Disciplinas do curso",
-    description: "Catálogo das disciplinas da sua matriz.",
-    icon: "subjects",
   },
   "my-department": {
     route: "my-department",
@@ -104,6 +98,42 @@ export const ITEMS = {
     description: "Administradores e secretaria do sistema.",
     icon: "staff",
   },
+  calendar: {
+    route: "calendar",
+    label: "Calendário acadêmico",
+    description: "Períodos letivos, semestres e os prazos de inscrição, cancelamento e notas.",
+    icon: "calendar",
+  },
+  classes: {
+    route: "classes",
+    label: "Turmas",
+    description: "Turmas do semestre: aprovação, professores, horários, notas e frequência.",
+    icon: "classes",
+  },
+  enrollment: {
+    route: "enrollment",
+    label: "Inscrição em turmas",
+    description: "Consulte as turmas abertas e inscreva-se no semestre.",
+    icon: "enrollment",
+  },
+  panel: {
+    route: "panel",
+    label: "Painel acadêmico",
+    description: "Suas notas, frequência, atividades e avisos por turma.",
+    icon: "panel",
+  },
+  news: {
+    route: "news",
+    label: "Avisos",
+    description: "Notícias e avisos das turmas e da instituição.",
+    icon: "news",
+  },
+  reopenings: {
+    route: "reopenings",
+    label: "Liberação de notas",
+    description: "Solicitações de lançamento de notas fora do prazo.",
+    icon: "reopenings",
+  },
   "register-users": {
     route: "register-users",
     label: "Usuários",
@@ -120,7 +150,14 @@ const items = (...routes: Route[]): NavItem[] =>
 export const STUDENT_SECTIONS: NavSection[] = [
   {
     id: "student",
-    items: items("my-course", "my-curriculum", "my-subjects", "profile"),
+    items: items(
+      "panel",
+      "enrollment",
+      "news",
+      "calendar",
+      "my-course",
+      "profile",
+    ),
   },
 ];
 
@@ -128,7 +165,16 @@ export const STUDENT_SECTIONS: NavSection[] = [
 export const TEACHER_SECTIONS: NavSection[] = [
   {
     id: "teacher",
-    items: items("my-department", "students", "courses", "subjects", "profile"),
+    items: items(
+      "classes",
+      "news",
+      "calendar",
+      "my-department",
+      "students",
+      "courses",
+      "subjects",
+      "profile",
+    ),
   },
 ];
 
@@ -142,6 +188,11 @@ const ACADEMIC: NavSection = {
   title: "Estrutura acadêmica",
   items: items("departments", "courses", "subjects"),
 };
+const OPERATION: NavSection = {
+  id: "operation",
+  title: "Operação acadêmica",
+  items: items("calendar", "classes", "reopenings", "news"),
+};
 const ADMINISTRATION: NavSection = {
   id: "administration",
   title: "Administração",
@@ -154,12 +205,13 @@ const ACCOUNT: NavSection = {
 };
 
 /** The secretariat manages people and the academic structure. */
-export const SECRETARY_SECTIONS: NavSection[] = [PEOPLE, ACADEMIC, ACCOUNT];
+export const SECRETARY_SECTIONS: NavSection[] = [PEOPLE, ACADEMIC, OPERATION, ACCOUNT];
 
 /** The administrator adds user and staff management. */
 export const ADMIN_SECTIONS: NavSection[] = [
   PEOPLE,
   ACADEMIC,
+  OPERATION,
   ADMINISTRATION,
   ACCOUNT,
 ];

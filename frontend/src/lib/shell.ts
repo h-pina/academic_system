@@ -28,6 +28,7 @@ export interface Crumb {
 
 const NESTED_LABELS: Record<string, string> = {
   curriculum: "Matriz curricular",
+  subjects: "Lista de disciplinas",
 };
 
 /**

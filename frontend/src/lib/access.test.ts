@@ -35,9 +35,11 @@ describe("expandRoles / hasAnyRole", () => {
 describe("student navigation", () => {
   it("is about the student's own path, with no lists of other people", () => {
     expect(routes(["student"])).toEqual([
+      "panel",
+      "enrollment",
+      "news",
+      "calendar",
       "my-course",
-      "my-curriculum",
-      "my-subjects",
       "profile",
     ]);
   });
@@ -50,6 +52,9 @@ describe("student navigation", () => {
 describe("teacher navigation", () => {
   it("is about the department and the catalogue", () => {
     expect(routes(["teacher"])).toEqual([
+      "classes",
+      "news",
+      "calendar",
       "my-department",
       "students",
       "courses",
@@ -67,13 +72,22 @@ describe("teacher navigation", () => {
 
 describe("secretary and admin navigation", () => {
   it("groups the secretary's modules by purpose", () => {
-    expect(titles(["secretary"])).toEqual(["Pessoas", "Estrutura acadêmica", "Conta"]);
+    expect(titles(["secretary"])).toEqual([
+      "Pessoas",
+      "Estrutura acadêmica",
+      "Operação acadêmica",
+      "Conta",
+    ]);
     expect(routes(["secretary"])).toEqual([
       "students",
       "teachers",
       "departments",
       "courses",
       "subjects",
+      "calendar",
+      "classes",
+      "reopenings",
+      "news",
       "profile",
     ]);
   });
@@ -82,6 +96,7 @@ describe("secretary and admin navigation", () => {
     expect(titles(["admin"])).toEqual([
       "Pessoas",
       "Estrutura acadêmica",
+      "Operação acadêmica",
       "Administração",
       "Conta",
     ]);
@@ -107,7 +122,7 @@ describe("a person with several profiles", () => {
     const list = routes(["teacher", "student"]);
     expect(list.filter((route) => route === "profile")).toHaveLength(1);
     expect(list).toEqual(
-      expect.arrayContaining(["my-department", "students", "my-course", "my-curriculum"]),
+      expect.arrayContaining(["my-department", "students", "my-course"]),
     );
     const sections = buildNavigation(["teacher", "student"]);
     expect(sections[0].items.map((item) => item.route)).toContain("profile");
@@ -118,6 +133,7 @@ describe("a person with several profiles", () => {
     expect(titles(["secretary", "student"])).toEqual([
       "Pessoas",
       "Estrutura acadêmica",
+      "Operação acadêmica",
       "Conta",
       "Como aluno",
     ]);
@@ -139,7 +155,7 @@ describe("a person without profile", () => {
 
 describe("canAccessRoute", () => {
   it("follows the navigation of each profile", () => {
-    expect(canAccessRoute(["student"], "my-curriculum")).toBe(true);
+    expect(canAccessRoute(["student"], "my-course")).toBe(true);
     expect(canAccessRoute(["teacher"], "my-department")).toBe(true);
     expect(canAccessRoute(["secretary"], "teachers")).toBe(true);
     expect(canAccessRoute(["admin"], "staff")).toBe(true);
@@ -175,9 +191,45 @@ describe("labels and titles", () => {
   });
 
   it("names pages from the navigation", () => {
-    expect(resolvePageTitle("my-curriculum")).toBe("Minha matriz");
+    expect(resolvePageTitle("my-course")).toBe("Meu curso");
     expect(resolvePageTitle("courses")).toBe("Cursos e matrizes");
     expect(resolvePageTitle("design")).toBe("Componentes");
     expect(resolvePageTitle("nope")).toBe("Módulo");
+  });
+});
+
+describe("semester operations modules", () => {
+  it("gives only students the enrollment and the academic panel", () => {
+    expect(routes(["student"])).toEqual(expect.arrayContaining(["enrollment", "panel"]));
+    for (const roles of [["teacher"], ["secretary"], ["admin"]] as RoleName[][]) {
+      expect(routes(roles)).not.toContain("enrollment");
+      expect(routes(roles)).not.toContain("panel");
+    }
+  });
+
+  it("gives the class screens to teachers and staff, not to students", () => {
+    expect(canAccessRoute(["teacher"], "classes")).toBe(true);
+    expect(canAccessRoute(["secretary"], "classes")).toBe(true);
+    expect(canAccessRoute(["student"], "classes")).toBe(false);
+  });
+
+  it("keeps grade reopening requests with the Administration", () => {
+    expect(canAccessRoute(["secretary"], "reopenings")).toBe(true);
+    expect(canAccessRoute(["admin"], "reopenings")).toBe(true);
+    expect(canAccessRoute(["teacher"], "reopenings")).toBe(false);
+    expect(canAccessRoute(["student"], "reopenings")).toBe(false);
+  });
+
+  it("lets every profile read the calendar and the news", () => {
+    for (const role of ["student", "teacher", "secretary", "admin"] as RoleName[]) {
+      expect(canAccessRoute([role], "calendar")).toBe(true);
+      expect(canAccessRoute([role], "news")).toBe(true);
+    }
+    expect(canAccessRoute([], "calendar")).toBe(false);
+  });
+
+  it("titles the new pages", () => {
+    expect(resolvePageTitle("calendar")).toBe("Calendário acadêmico");
+    expect(resolvePageTitle("enrollment")).toBe("Inscrição em turmas");
   });
 });

@@ -7,10 +7,11 @@ user's navigation and answers "can this user open this route?".
 
 | Profile | Section | Modules |
 |---------|---------|---------|
-| Student | (none) | Meu curso, Minha matriz, Disciplinas do curso, Meus dados |
-| Teacher | (none) | Meu departamento, Alunos, Cursos e matrizes, Disciplinas, Meus dados |
+| Student | (none) | Painel acadêmico, Inscrição em turmas, Avisos, Calendário acadêmico, Meu curso, Meus dados |
+| Teacher | (none) | Turmas, Avisos, Calendário acadêmico, Meu departamento, Alunos, Cursos e matrizes, Disciplinas, Meus dados |
 | Secretary | Pessoas | Alunos, Professores |
 | | Estrutura acadêmica | Departamentos, Cursos e matrizes, Disciplinas |
+| | Operação acadêmica | Calendário acadêmico, Turmas, Liberação de notas, Avisos |
 | | Conta | Meus dados |
 | Admin | the secretary's sections plus | Administração: Funcionários, Usuários |
 | No profile | (none) | only Meus dados; everything else shows the "no link" notice |
@@ -23,11 +24,17 @@ offered by two kinds appears once.
 
 | Route | For | Content | Data |
 |-------|-----|---------|------|
-| `/app/my-course` | student | Course, department, status, matrícula, hours | `GET /dashboard` |
-| `/app/my-curriculum` | student | Own course's curriculum by semester | `GET /courses/:id/curriculum` |
-| `/app/my-subjects` | student | Subjects of the own course, searchable | `GET /subjects?courseId=` |
+| `/app/my-course` | student | Own course, progress (hours passed and remaining) and curriculum by semester | `GET /dashboard`, `GET /courses/:id/curriculum`, `GET /enrollments/me` |
+| `/app/my-course/subjects` | student | Subjects of the own course, searchable (button "Ver lista de disciplinas" in Meu curso) | `GET /subjects?courseId=` |
 | `/app/my-department` | teacher | Indicators, courses, colleagues | `GET /dashboard`, `GET /teachers?departmentId=` |
 | `/app/profile` | everyone | Name, e-mail, matrícula, password | `GET /auth/me`, `PUT /users/me` |
+| `/app/calendar` | everyone reads; staff write | Calendars with their deadlines and the semesters (create, deploy, close) | `/calendars`, `/semesters` |
+| `/app/classes` | teacher, staff | Classes with filters; create, request (teacher), approve, reject | `/classes`, `/classes/requests` |
+| `/app/classes/[classId]` | teacher, staff | Summary and roster; tabs Notas, Frequência, Atividades, Avisos; reports CSV/PDF | `/classes/:id/*`, `/assessments/:id/grades` |
+| `/app/enrollment` | student | Open classes (subject, teacher, schedule, seats), enroll, cancel, lock | `/classes/available`, `/enrollments` |
+| `/app/panel` | student | Grades, attendance, activities (with delivery) and news per class | `GET /me/academic-panel` |
+| `/app/news` | everyone reads; teacher, staff write | Notices of the user's classes and the institution | `/news` |
+| `/app/reopenings` | staff | Requests to post grades after the deadline | `/grade-reopenings` |
 
 ## What is and is not enforced
 
